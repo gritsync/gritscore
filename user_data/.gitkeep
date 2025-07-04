@@ -1,0 +1,2 @@
+# This file ensures the user_data directory is tracked by git
+# while the contents are ignored 

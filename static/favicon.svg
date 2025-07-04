@@ -1,0 +1,19 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="faviconGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0977B9;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#075985;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Darker sky blue rounded square -->
+  <rect x="0" y="0" width="32" height="32" rx="8" fill="url(#faviconGradient)"/>
+  
+  <!-- Centered "GS.ai" -->
+  <text x="16" y="18" text-anchor="middle" dominant-baseline="central">
+    <tspan font-family="Poppins, Nunito, Quicksand, Arial Rounded MT Bold, Arial, sans-serif" 
+           font-size="14" font-weight="bold" fill="white" letter-spacing="-1">GS</tspan>
+    <tspan font-family="Poppins, Nunito, Quicksand, Arial Rounded MT Bold, Arial, sans-serif"
+           font-size="6" font-weight="bold" fill="white" dx="1">.ai</tspan>
+  </text>
+</svg>

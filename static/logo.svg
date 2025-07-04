@@ -1,0 +1,39 @@
+<svg width="200" height="60" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0977B9;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#075985;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Icon: Darker sky blue rounded square with GS.ai -->
+  <g transform="translate(5, 8)">
+    <!-- Darker sky blue rounded square -->
+    <rect x="0" y="0" width="44" height="44" rx="10" fill="url(#logoGradient)"/>
+    <!-- Centered "GS.ai" -->
+    <text x="22" y="24" text-anchor="middle" dominant-baseline="central">
+      <tspan font-family="Poppins, Nunito, Quicksand, Arial Rounded MT Bold, Arial, sans-serif" 
+             font-size="18" font-weight="bold" fill="white" letter-spacing="-1">GS</tspan>
+      <tspan font-family="Poppins, Nunito, Quicksand, Arial Rounded MT Bold, Arial, sans-serif"
+             font-size="9" font-weight="bold" fill="#808080" dx="0">.ai</tspan>
+    </text>
+  </g>
+  
+  <!-- Text: GritScore.ai -->
+  <g transform="translate(55, 0)">
+    <!-- GritScore -->
+    <text x="0" y="25" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="url(#logoGradient)">
+      GritScore
+    </text>
+    
+    <!-- .ai -->
+    <text x="85" y="25" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#6b7280">
+      .ai
+    </text>
+    
+    <!-- Tagline - moved closer -->
+    <text x="0" y="40" font-family="Arial, sans-serif" font-size="10" fill="#6b7280">
+      AI-Powered Credit Intelligence
+    </text>
+  </g>
+</svg>
