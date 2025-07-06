@@ -74,7 +74,11 @@ def create_app():
     from src.api.ml import ml_bp
     from src.api.crdt import crdt_bp
 
-    CORS(app, supports_credentials=True, expose_headers=["Authorization"], allow_headers=["Authorization", "Content-Type"])
+    CORS(app, origins=[
+        "https://gritscore.vercel.app",
+        "https://www.gritscore.vercel.app",
+        "http://localhost:5173"
+    ], supports_credentials=True, expose_headers=["Authorization"], allow_headers=["Authorization", "Content-Type"])
     jwt = JWTManager(app)
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
