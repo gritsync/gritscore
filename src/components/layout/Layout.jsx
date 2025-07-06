@@ -195,10 +195,10 @@ export default function Layout() {
         <div className="sidebar">
           <div className="flex h-16 items-center px-6 justify-between lg:justify-start">
             <div className="flex items-center space-x-2">
-              <img src="/static/logo.svg" alt="GritScore.ai" className="h-12 w-auto" />
+              <img src="/gritscore.png" alt="GritScore.ai" className="h-12 w-auto" />
             </div>
             {/* Close button for mobile */}
-            <button className="lg:hidden p-2" onClick={() => setSidebarOpen(false)}>
+            <button className="lg:hidden p-2.5" onClick={() => setSidebarOpen(false)}>
               <XMarkIcon className="w-6 h-6 text-gray-700 dark:text-gray-200" />
             </button>
           </div>

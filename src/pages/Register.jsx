@@ -110,7 +110,7 @@ export default function Register() {
       >
         <div className="text-center">
           <div className="flex justify-center">
-            <img src="/static/logo.svg" alt="GritScore.ai" className="h-20 w-auto" />
+            <img src="/gritscore.png" alt="GritScore.ai" className="h-20 w-auto" />
           </div>
           <h2 className="mt-6 text-3xl font-bold text-grit-900">
             Create your account

@@ -182,7 +182,7 @@ export default function VerifyEmail() {
       <div className="max-w-md w-full">
         {/* Logo */}
         <div className="text-center mb-8">
-          <img src="/static/logo.svg" alt="GritScore.ai" className="h-16 w-auto mx-auto" />
+          <img src="/gritscore.png" alt="GritScore.ai" className="h-16 w-auto mx-auto" />
         </div>
 
         {/* Verification Card */}
