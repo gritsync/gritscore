@@ -7,6 +7,8 @@ const STRIPE_PUBLISHABLE_KEY = window.STRIPE_PUBLISHABLE_KEY || 'pk_live_REPLACE
 
 const stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
 
+const apiUrl = import.meta.env.VITE_API_URL;
+
 document.addEventListener('DOMContentLoaded', function() {
     const uploadForm = document.getElementById('upload-form');
     if (!uploadForm) return;
@@ -15,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
         e.preventDefault();
         const formData = new FormData(uploadForm);
         // Optionally: Validate file before proceeding
-        const response = await fetch('/create-checkout-session', {
+        const response = await fetch(`${apiUrl}/create-checkout-session`, {
             method: 'POST',
             headers: { 'Accept': 'application/json' },
             body: formData

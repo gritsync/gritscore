@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext'
 import { toast } from 'react-hot-toast'
 import { CheckCircleIcon, ExclamationTriangleIcon, EnvelopeIcon } from '@heroicons/react/24/outline'
 
+const apiUrl = import.meta.env.VITE_API_URL;
+
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -24,7 +26,7 @@ export default function VerifyEmail() {
 
   const verifyEmail = async (verificationToken) => {
     try {
-      const response = await fetch('/api/auth/verify-email', {
+      const response = await fetch(`${apiUrl}/auth/verify-email`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -66,7 +68,7 @@ export default function VerifyEmail() {
 
     setIsResending(true)
     try {
-      const response = await fetch('/api/auth/resend-verification', {
+      const response = await fetch(`${apiUrl}/auth/resend-verification`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

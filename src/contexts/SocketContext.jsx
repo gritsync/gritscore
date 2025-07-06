@@ -6,12 +6,14 @@ const SocketContext = createContext(null)
 
 export const useSocket = () => useContext(SocketContext)
 
+const apiUrl = import.meta.env.VITE_API_URL;
+
 export const SocketProvider = ({ children }) => {
   const socketRef = useRef(null)
 
   useEffect(() => {
     // Connect to backend Socket.IO server directly
-    const socket = io('http://localhost:5000', {
+    const socket = io(apiUrl, {
       transports: ['websocket'],
       withCredentials: true,
     })

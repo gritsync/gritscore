@@ -6,6 +6,8 @@ import { motion } from 'framer-motion'
 import { SparklesIcon, EyeIcon, EyeSlashIcon, EnvelopeIcon } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
 
+const apiUrl = import.meta.env.VITE_API_URL;
+
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -53,7 +55,7 @@ export default function Login() {
 
     setIsResending(true)
     try {
-      const response = await fetch('/api/auth/resend-verification', {
+      const response = await fetch(`${apiUrl}/auth/resend-verification`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
