@@ -18,10 +18,9 @@ httpcore>=1.0.8
 urllib3>=2.4.0
 certifi>=2025.1.31
 
-# Data processing and analysis
-numpy>=2.2.5
-matplotlib>=3.10.1
-pandas>=2.0.0
+# Data processing and analysis - using more compatible versions
+numpy>=1.24.0,<2.0.0
+matplotlib>=3.7.0,<4.0.0
 openai>=1.75.0
 
 # PDF processing
@@ -31,8 +30,6 @@ pdfkit>=1.0.0
 
 # Image processing
 Pillow>=11.2.1
-pytesseract
-opencv-python>=4.9.0
 
 # Utilities
 click>=8.1.8
@@ -56,10 +53,6 @@ pydantic-core>=2.33.1
 
 # Development and deployment
 gunicorn>=23.0.0
-
-# Optional: Machine Learning (compatible with Python 3.13)
-# torch>=2.6.0  # Uncomment if needed and compatible
-# torchvision>=0.21.0  # Uncomment if needed and compatible
 
 # Additional dependencies
 anyio>=4.9.0

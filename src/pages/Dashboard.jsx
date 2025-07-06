@@ -192,7 +192,7 @@ export default function Dashboard() {
   })
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-2 sm:px-4 md:px-6 lg:px-0 max-w-7xl mx-auto w-full">
       {/* Upgrade Banner for Free plan */}
       {!planLoading && plan === 'Free' && (
         <div className="bg-yellow-100 border-l-4 border-yellow-400 p-4 flex items-center justify-between">
@@ -201,7 +201,7 @@ export default function Dashboard() {
         </div>
       )}
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-0">
         <div>
           <h1 className="text-2xl font-bold text-theme-text flex items-center gap-2">
             Dashboard
@@ -242,7 +242,7 @@ export default function Dashboard() {
         </div>
       )}
       {/* Credit Score Overview */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Current Score */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -354,7 +354,7 @@ export default function Dashboard() {
         className="card"
       >
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {quickActionsWithLock.map((action) => (
             <div key={action.title} className="relative">
               <button
@@ -394,7 +394,7 @@ export default function Dashboard() {
         className="card"
       >
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activities</h3>
-        <div className="space-y-4">
+        <div className="space-y-4 max-h-96 overflow-y-auto">
           {recentActivities.map((activity) => (
             <div key={activity.id} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
               <div className="flex-shrink-0 mt-1">

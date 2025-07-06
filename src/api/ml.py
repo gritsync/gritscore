@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
-import torch
 import numpy as np
+import random
 from src.services.supabase_client import supabase, get_supabase_from_request
 
 ml_bp = Blueprint('ml', __name__)
@@ -12,18 +12,20 @@ ml_bp = Blueprint('ml', __name__)
 class MockZeroKnowledgeModel:
     """Mock zkPyTorch model for demonstration"""
     def __init__(self):
-        self.model = torch.nn.Sequential(
-            torch.nn.Linear(10, 64),
-            torch.nn.ReLU(),
-            torch.nn.Linear(64, 32),
-            torch.nn.ReLU(),
-            torch.nn.Linear(32, 1)
-        )
+        # Simple mock model without torch dependency
+        self.weights = [0.3, 0.25, 0.2, 0.15, 0.1]
     
     def predict_private(self, encrypted_data):
         """Mock private prediction (data never decrypted)"""
         # In real zkPyTorch, this would work with encrypted data
-        return torch.randn(1).item() * 100 + 650  # Mock credit score
+        # Simple mock calculation
+        payment_score = len(encrypted_data.get('payment_history', [])) * 10
+        utilization_score = max(0, 100 - encrypted_data.get('credit_utilization', 0))
+        age_score = min(encrypted_data.get('account_age', 0) * 2, 50)
+        
+        base_score = 650
+        total_score = base_score + payment_score + utilization_score + age_score
+        return min(max(total_score, 300), 850)  # Clamp between 300-850
 
 # Initialize mock model
 zk_model = MockZeroKnowledgeModel()

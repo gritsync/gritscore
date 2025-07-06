@@ -502,9 +502,9 @@ export default function Budgeting() {
   if (error) return <div className="p-8 text-center text-red-500">{error}</div>;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-2 sm:px-4 md:px-6 lg:px-0 max-w-7xl mx-auto w-full">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-0">
         <div>
           <h1 className="text-2xl font-bold text-theme-text">Advanced Budgeting</h1>
           <p className="mt-1 text-sm text-theme-primary">
@@ -555,7 +555,7 @@ export default function Budgeting() {
 
       {/* Tabs for Category Management */}
       <div className="card">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-0 mb-6">
           <div className="flex gap-4">
             <button className={`px-4 py-2 rounded-lg font-medium transition-colors ${tab === 'income' ? 'bg-blue-700 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-300'}`} onClick={() => setTab('income')}>Income</button>
             <button className={`px-4 py-2 rounded-lg font-medium transition-colors ${tab === 'expense' ? 'bg-blue-700 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-300'}`} onClick={() => setTab('expense')}>Expense</button>

@@ -66,6 +66,7 @@ export default function Layout() {
   const [supabaseProfile, setSupabaseProfile] = useState(null)
   const [subscriptionPlan, setSubscriptionPlan] = useState('Free Plan')
   const themeMenuRef = useRef(null)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   // Handle clicking outside theme menu
   useEffect(() => {
@@ -187,13 +188,19 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen bg-theme-background">
-      {/* Always-on sidebar */}
-      <div className="fixed inset-y-0 left-0 flex w-64 flex-col sidebar z-40">
+      {/* Mobile sidebar overlay */}
+      <div className={`fixed inset-0 z-50 bg-black bg-opacity-40 transition-opacity lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`} onClick={() => setSidebarOpen(false)} />
+      {/* Sidebar */}
+      <div className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col sidebar bg-white dark:bg-gray-900 shadow-lg transform transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:static lg:inset-0 lg:flex`}> 
         <div className="sidebar">
-          <div className="flex h-16 items-center px-6">
+          <div className="flex h-16 items-center px-6 justify-between lg:justify-start">
             <div className="flex items-center space-x-2">
               <img src="/static/logo.svg" alt="GritScore.ai" className="h-12 w-auto" />
             </div>
+            {/* Close button for mobile */}
+            <button className="lg:hidden p-2" onClick={() => setSidebarOpen(false)}>
+              <XMarkIcon className="w-6 h-6 text-gray-700 dark:text-gray-200" />
+            </button>
           </div>
           <nav className="flex-1 space-y-1 px-4 py-4">
             {filteredNavigation.map((item) => {
@@ -203,6 +210,7 @@ export default function Layout() {
                   key={item.name}
                   to={item.href}
                   className={`nav-item group ${isActive ? 'active' : ''}`}
+                  onClick={() => setSidebarOpen(false)} // close sidebar on mobile nav
                 >
                   <item.icon className="w-5 h-5 mr-3" />
                   {item.name}
@@ -223,16 +231,16 @@ export default function Layout() {
       </div>
 
       {/* Main content */}
-      <div className="pl-64">
+      <div className="lg:pl-64 flex flex-col min-h-screen">
         {/* Top bar */}
-        <div className="top-bar px-4 sm:gap-x-6 sm:px-6 lg:px-8">
+        <div className="top-bar flex items-center px-4 sm:gap-x-6 sm:px-6 lg:px-8 h-16 shadow bg-white dark:bg-gray-900 sticky top-0 z-30">
           <button
             type="button"
             className="-m-2.5 p-2.5 text-theme-primary lg:hidden"
+            onClick={() => setSidebarOpen(true)}
           >
             <Bars3Icon className="w-6 h-6" />
           </button>
-
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
             <div className="flex flex-1" />
             <div className="flex items-center gap-x-4 lg:gap-x-6">
@@ -269,9 +277,8 @@ export default function Layout() {
             </div>
           </div>
         </div>
-
         {/* Page content */}
-        <main className="py-6">
+        <main className="py-6 flex-1">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <Outlet />
           </div>

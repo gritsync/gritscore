@@ -1,11 +1,20 @@
 [phases.setup]
-nixPkgs = ["python39", "python39Packages.pip"]
+nixPkgs = [
+    "python311", 
+    "python311Packages.pip", 
+    "python311Packages.gunicorn", 
+    "gcc", 
+    "glibc", 
+    "stdenv.cc.cc.lib"
+]
 
 [phases.install]
-cmds = ["pip install -r requirements.txt"]
+cmds = [
+    "chmod +x build.sh && ./build.sh"
+]
 
 [phases.build]
 cmds = ["echo 'Build complete'"]
 
 [start]
-cmd = "gunicorn --bind 0.0.0.0:$PORT wsgi:app" 
+cmd = "gunicorn --bind 0.0.0.0:$PORT wsgi:app --workers 2 --timeout 120" 
