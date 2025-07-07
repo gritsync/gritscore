@@ -697,7 +697,7 @@ export default function Budgeting() {
                 </tbody>
               </table>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Itemized Settings</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Itemized Settings - {new Date(year, month - 1).toLocaleString('default', { month: 'long', year: 'numeric' })}</h3>
             <div className="overflow-x-auto">
               <table className="min-w-full text-sm border border-gray-200">
                 <thead className="border-b border-gray-200">
@@ -714,10 +714,10 @@ export default function Budgeting() {
                   </tr>
                 </thead>
                 <tbody>
-                  {transactions.length === 0 && (
-                    <tr className="border-b border-gray-100"><td colSpan={9} className="text-center text-gray-400 py-2">No items</td></tr>
+                  {transactions.filter(item => getMonthYear(item.date) === selectedMonth).length === 0 && (
+                    <tr className="border-b border-gray-100"><td colSpan={9} className="text-center text-gray-400 py-2">No items for {new Date(year, month - 1).toLocaleString('default', { month: 'long', year: 'numeric' })}</td></tr>
                   )}
-                  {transactions.map(item => {
+                  {transactions.filter(item => getMonthYear(item.date) === selectedMonth).map(item => {
                     const cat = allFilteredCategories.find(c => c.id === item.category_id);
                     const startDate = item.date;
                     const endDate = item.date;
