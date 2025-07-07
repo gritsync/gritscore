@@ -187,13 +187,13 @@ export default function Layout() {
   const filteredNavigation = navigation.filter(item => item.always || currentAccess[item.access])
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Mobile sidebar overlay */}
       <div className={`fixed inset-0 z-40 bg-black bg-opacity-50 transition-opacity duration-300 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`} onClick={() => setSidebarOpen(false)} aria-hidden={!sidebarOpen} />
       
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-xl transition-transform duration-300 ease-in-out transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:static lg:translate-x-0 lg:shadow-none`}
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-xl transition-transform duration-300 ease-in-out transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
         aria-label="Sidebar"
       >
         {/* Sidebar Header */}
@@ -213,7 +213,7 @@ export default function Layout() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto h-[calc(100vh-8rem)]">
           <div className="mb-6">
             <h3 className="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
               Main Navigation
@@ -244,7 +244,7 @@ export default function Layout() {
         </nav>
 
         {/* Sidebar Footer */}
-        <div className="border-t border-gray-200 dark:border-gray-700 p-4">
+        <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-800">
           <div className="flex items-center space-x-3 mb-4">
             <div className={`w-8 h-8 bg-gradient-to-r ${gradientColors} rounded-full flex items-center justify-center`}>
               <span className="text-white font-semibold text-xs">{initials}</span>
@@ -270,7 +270,7 @@ export default function Layout() {
       </aside>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="lg:ml-64 flex-1 flex flex-col min-w-0">
         {/* Top bar */}
         <div className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 shadow-sm">
           <button
