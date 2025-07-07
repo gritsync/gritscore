@@ -7,6 +7,7 @@ import uuid
 from src.services.email_service import email_service
 from src.services.supabase_client import supabase, get_supabase_from_request
 import jwt
+from datetime import datetime, timedelta
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -38,6 +39,10 @@ def register():
     full_name = ' '.join([part for part in name_parts if part.strip()])
     preferred_name = f"{first_name} {last_name}".strip()
     
+    # Set subscription dates for free plan (3 months)
+    subscription_start = datetime.utcnow()
+    subscription_end = subscription_start + timedelta(days=90)  # 3 months
+    
     insert_data = {
         'id': user_id,
         'email': email,
@@ -47,7 +52,9 @@ def register():
         'full_name': full_name,
         'preferred_name': preferred_name,
         'password_hash': password_hash,
-        'subscription_plan': 'Free',
+        'subscription_plan': 'free',
+        'subscription_start_date': subscription_start.isoformat(),
+        'subscription_end_date': subscription_end.isoformat(),
         'email_verified': False
     }
     try:

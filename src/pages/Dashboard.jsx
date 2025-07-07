@@ -16,7 +16,8 @@ import {
   UserIcon,
   CreditCardIcon,
   BanknotesIcon,
-  ShieldCheckIcon
+  ShieldCheckIcon,
+  StarIcon
 } from '@heroicons/react/24/outline'
 import { creditAPI, chatAPI, disputeAPI, subscriptionAPI, creditDetailsAPI } from '../services/api'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts'
@@ -34,14 +35,25 @@ export default function Dashboard() {
   const [lockedFeature, setLockedFeature] = useState('')
   const [creditData, setCreditData] = useState(null)
   const [creditLoading, setCreditLoading] = useState(true)
+  const [upgradeSuggestion, setUpgradeSuggestion] = useState(null)
 
   useEffect(() => {
     async function fetchPlan() {
       try {
         const res = await subscriptionAPI.getCurrentPlan()
         setPlan(res.data.plan)
+        
+        // Get upgrade suggestion if not VIP
+        if (res.data.plan !== 'vip') {
+          try {
+            const upgradeRes = await subscriptionAPI.getUpgradeSuggestion()
+            setUpgradeSuggestion(upgradeRes.data)
+          } catch (e) {
+            console.log('Failed to get upgrade suggestion:', e)
+          }
+        }
       } catch (e) {
-        setPlan('Free')
+        setPlan('free')
       } finally {
         setPlanLoading(false)
       }
@@ -356,9 +368,15 @@ export default function Dashboard() {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-4 sm:mt-0">
-          {/* Only show upgrade button for free users */}
-          {plan === 'Free' && !planLoading && (
-            <Link to="/app/pricing" className="btn btn-primary w-full sm:w-auto">Upgrade</Link>
+          {/* Show upgrade button based on plan */}
+          {!planLoading && plan && plan !== 'vip' && upgradeSuggestion && (
+            <Link 
+              to="/app/pricing" 
+              className="btn btn-primary w-full sm:w-auto flex items-center gap-2"
+            >
+              <StarIcon className="w-4 h-4" />
+              Upgrade to {upgradeSuggestion.suggested_plan_details?.name}
+            </Link>
           )}
           <select
             value={selectedTimeframe}
@@ -372,6 +390,28 @@ export default function Dashboard() {
           </select>
         </div>
       </div>
+
+      {/* Upgrade suggestion banner for non-VIP users */}
+      {!planLoading && plan && plan !== 'vip' && upgradeSuggestion && (
+        <div className="card bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-blue-900 mb-1">
+                Ready for the next level?
+              </h3>
+              <p className="text-blue-700 text-sm">
+                Upgrade to {upgradeSuggestion.suggested_plan_details?.name} for just ${(upgradeSuggestion.suggested_plan_details?.price / 100).toFixed(2)}/{upgradeSuggestion.suggested_plan_details?.billing_period === 'monthly' ? 'month' : upgradeSuggestion.suggested_plan_details?.billing_period === '6_months' ? '6 months' : '12 months'}
+              </p>
+            </div>
+            <Link 
+              to="/app/pricing" 
+              className="btn btn-primary btn-sm"
+            >
+              Upgrade Now
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* What's included in your plan */}
       {!planLoading && plan && (

@@ -144,6 +144,7 @@ export const profileAPI = {
 export const subscriptionAPI = {
   getPlans: () => api.get('/subscription/plans'),
   getCurrentPlan: () => api.get('/subscription/current'),
+  getUpgradeSuggestion: () => api.get('/subscription/upgrade-suggestion'),
   createCheckoutSession: (planId) => api.post('/subscription/checkout', { planId }),
   cancelSubscription: () => api.post('/subscription/cancel'),
   updatePlan: (plan) => api.post('/subscription/update-plan', { plan }),

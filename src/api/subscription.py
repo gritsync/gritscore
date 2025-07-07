@@ -5,42 +5,60 @@ import json
 from src.services.supabase_client import supabase, get_supabase_from_request
 import functools
 from src.services.email_service import email_service
+from src.services.subscription_manager import SubscriptionManager
+from datetime import datetime, timedelta
 # TODO: Refactor this module to use Supabase client instead of SQLAlchemy.
 
 # Stripe key is set in app.py from environment variables
 
 subscription_bp = Blueprint('subscription', __name__)
 
-# SaaS plans
+# Updated SaaS plans with new pricing and billing periods
 PLANS = {
     'free': {
         'id': 'price_free',
         'name': 'Free',
         'price': 0,  # $0.00
+        'billing_period': '3_months',  # 3 months only
         'features': ['Budgeting', 'Debt Tracking'],
-        'description': 'Free for 1 month'
+        'description': 'Free for 3 months only',
+        'auto_renew': False
     },
     'basic': {
-        'id': 'price_basic',
+        'id': 'price_basic_monthly',
         'name': 'Basic',
-        'price': 599,  # $5.99
+        'price': 299,  # $2.99
+        'billing_period': 'monthly',
         'features': ['Budgeting', 'Debt Tracking', 'AI Chat'],
-        'description': 'Includes AI Chat'
+        'description': 'Includes AI Chat - Monthly billing',
+        'auto_renew': True
     },
     'premium': {
-        'id': 'price_premium',
+        'id': 'price_premium_6months',
         'name': 'Premium',
-        'price': 999,  # $9.99
+        'price': 5994,  # $59.94 for 6 months ($9.99/month)
+        'billing_period': '6_months',
         'features': ['Credit Analysis', 'Budgeting', 'Debt Tracking', 'AI Chat'],
-        'description': 'Includes Credit Analysis'
+        'description': 'Includes Credit Analysis - 6-month billing',
+        'auto_renew': True
     },
     'vip': {
-        'id': 'price_vip',
+        'id': 'price_vip_12months',
         'name': 'VIP',
-        'price': 1999,  # $19.99
+        'price': 23988,  # $239.88 for 12 months ($19.99/month)
+        'billing_period': '12_months',
         'features': ['Disputes', 'Credit Analysis', 'Budgeting', 'Debt Tracking', 'AI Chat'],
-        'description': 'Includes Disputes'
+        'description': 'Includes Disputes - 12-month billing',
+        'auto_renew': True
     }
+}
+
+# Plan upgrade mapping for advertisements
+PLAN_UPGRADE_MAP = {
+    'free': 'basic',
+    'basic': 'premium',
+    'premium': 'vip',
+    'vip': None  # No advertisement for VIP users
 }
 
 class Subscription:
@@ -56,16 +74,51 @@ def get_plans():
 def get_current_subscription():
     user_id = get_jwt_identity()
     try:
-        user_supabase = get_supabase_from_request()
-        response = user_supabase.table('users').select('subscription_plan').eq('id', user_id).single().execute()
-        if response.data and response.data.get('subscription_plan'):
-            plan = response.data['subscription_plan']
-            return jsonify({'plan': plan, 'status': 'active'})
+        # Use subscription manager to get detailed status
+        status = SubscriptionManager.get_subscription_status(user_id)
+        if status:
+            return jsonify({
+                'plan': status['plan'],
+                'status': status['status'],
+                'is_expired': status['is_expired'],
+                'data_archived': status['data_archived'],
+                'days_remaining': status['days_remaining'],
+                'start_date': status['start_date'],
+                'end_date': status['end_date']
+            })
         else:
-            return jsonify({'plan': 'Free', 'status': 'active'})
+            return jsonify({'plan': 'free', 'status': 'active'})
     except Exception as e:
         print(f"[DEBUG] get_current_subscription error: {e}")
-        return jsonify({'plan': 'Free', 'status': 'active'})
+        return jsonify({'plan': 'free', 'status': 'active'})
+
+@subscription_bp.route('/upgrade-suggestion', methods=['GET'])
+@jwt_required()
+def get_upgrade_suggestion():
+    """Get the suggested upgrade plan for the current user"""
+    user_id = get_jwt_identity()
+    try:
+        status = SubscriptionManager.get_subscription_status(user_id)
+        current_plan = status['plan'] if status else 'free'
+        
+        suggested_plan = PLAN_UPGRADE_MAP.get(current_plan)
+        if suggested_plan:
+            return jsonify({
+                'current_plan': current_plan,
+                'suggested_plan': suggested_plan,
+                'suggested_plan_details': PLANS.get(suggested_plan, {}),
+                'is_expired': status.get('is_expired', False) if status else False,
+                'data_archived': status.get('data_archived', False) if status else False
+            })
+        else:
+            return jsonify({
+                'current_plan': current_plan,
+                'suggested_plan': None,
+                'message': 'You are already on the highest tier!'
+            })
+    except Exception as e:
+        print(f"[DEBUG] get_upgrade_suggestion error: {e}")
+        return jsonify({'error': 'Failed to get upgrade suggestion'}), 500
 
 @subscription_bp.route('/checkout', methods=['POST'])
 @jwt_required()
@@ -87,6 +140,25 @@ def create_checkout_session():
         # Get the current domain from environment or request
         current_domain = current_app.config.get('APP_URL', 'https://gritscore.vercel.app')
         
+        # Determine if this should be a subscription or one-time payment
+        if plan_id == 'free':
+            # Free plan - just update user plan
+            user_id = get_jwt_identity()
+            user_supabase = get_supabase_from_request()
+            
+            # Set 3-month trial period
+            start_date = datetime.utcnow()
+            end_date = start_date + timedelta(days=90)  # 3 months
+            
+            response = user_supabase.table('users').update({
+                'subscription_plan': plan_id,
+                'subscription_start_date': start_date.isoformat(),
+                'subscription_end_date': end_date.isoformat()
+            }).eq('id', user_id).execute()
+            
+            return jsonify({'success': True, 'message': 'Free plan activated for 3 months'})
+        
+        # For paid plans, create Stripe checkout session
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             line_items=[{
@@ -100,12 +172,14 @@ def create_checkout_session():
                 },
                 'quantity': 1,
             }],
-            mode='payment',
+            mode='subscription' if plan['auto_renew'] else 'payment',
             success_url=f'{current_domain}/payment-success?success=true&plan={plan_id}',
             cancel_url=f'{current_domain}/payment-success?canceled=true',
             metadata={
                 'plan_id': plan_id,
-                'plan_name': plan['name']
+                'plan_name': plan['name'],
+                'billing_period': plan['billing_period'],
+                'auto_renew': str(plan['auto_renew'])
             },
             # Add customer email if available
             customer_email=request.json.get('email'),
@@ -115,6 +189,14 @@ def create_checkout_session():
             shipping_address_collection={
                 'allowed_countries': ['US', 'CA'],
             },
+            # For subscriptions, add subscription data
+            subscription_data={
+                'metadata': {
+                    'plan_id': plan_id,
+                    'plan_name': plan['name'],
+                    'billing_period': plan['billing_period']
+                }
+            } if plan['auto_renew'] else None,
         )
         
         print(f"Checkout session created successfully: {checkout_session.id}")
@@ -164,9 +246,8 @@ def cancel_subscription():
 
 def get_user_plan(user_id):
     try:
-        user_supabase = get_supabase_from_request()
-        response = user_supabase.table('users').select('subscription_plan').eq('id', user_id).single().execute()
-        plan = response.data['subscription_plan'] if response.data and response.data.get('subscription_plan') else 'free'
+        status = SubscriptionManager.get_subscription_status(user_id)
+        plan = status['plan'] if status else 'free'
         print(f"[DEBUG] get_user_plan: user_id={user_id}, plan={plan}")
         return plan
     except Exception as e:
@@ -224,7 +305,31 @@ def update_plan():
     
     try:
         user_supabase = get_supabase_from_request()
-        response = user_supabase.table('users').update({'subscription_plan': plan}).eq('id', user_id).execute()
+        
+        # Set subscription dates based on plan
+        start_date = datetime.utcnow()
+        if plan == 'free':
+            end_date = start_date + timedelta(days=90)  # 3 months
+        elif plan == 'basic':
+            end_date = start_date + timedelta(days=30)  # 1 month
+        elif plan == 'premium':
+            end_date = start_date + timedelta(days=180)  # 6 months
+        elif plan == 'vip':
+            end_date = start_date + timedelta(days=365)  # 12 months
+        else:
+            end_date = start_date
+        
+        # Check if user had archived data and restore it
+        status = SubscriptionManager.get_subscription_status(user_id)
+        if status and status.get('data_archived'):
+            SubscriptionManager.restore_user_data(user_id)
+        
+        response = user_supabase.table('users').update({
+            'subscription_plan': plan,
+            'subscription_start_date': start_date.isoformat(),
+            'subscription_end_date': end_date.isoformat()
+        }).eq('id', user_id).execute()
+        
         print(f"Manually updated user {user_id} to plan {plan}")
         return jsonify({'message': f'Updated to {plan} plan'})
     except Exception as e:
@@ -281,7 +386,34 @@ def stripe_webhook():
             if customer_email and plan_name:
                 # Update the user's subscription_plan in Supabase
                 user_supabase = get_supabase_from_request()
-                response = user_supabase.table('users').update({'subscription_plan': plan_name}).eq('email', customer_email).execute()
+                
+                # Set subscription dates based on plan
+                start_date = datetime.utcnow()
+                if plan_name == 'basic':
+                    end_date = start_date + timedelta(days=30)  # 1 month
+                elif plan_name == 'premium':
+                    end_date = start_date + timedelta(days=180)  # 6 months
+                elif plan_name == 'vip':
+                    end_date = start_date + timedelta(days=365)  # 12 months
+                else:
+                    end_date = start_date
+                
+                # Get user ID first
+                user_response = user_supabase.table('users').select('id').eq('email', customer_email).single().execute()
+                if user_response.data:
+                    user_id = user_response.data['id']
+                    
+                    # Check if user had archived data and restore it
+                    status = SubscriptionManager.get_subscription_status(user_id)
+                    if status and status.get('data_archived'):
+                        SubscriptionManager.restore_user_data(user_id)
+                
+                response = user_supabase.table('users').update({
+                    'subscription_plan': plan_name,
+                    'subscription_start_date': start_date.isoformat(),
+                    'subscription_end_date': end_date.isoformat()
+                }).eq('email', customer_email).execute()
+                
                 print(f"Updated {customer_email} to plan {plan_name}")
                 # Send payment confirmation email via Mailjet
                 plan = PLANS.get(plan_name, {})
@@ -300,7 +432,9 @@ def stripe_webhook():
                             'user_id': user_id,
                             'plan': plan_name,
                             'status': 'active',
-                            'stripe_session_id': session['id']
+                            'stripe_session_id': session['id'],
+                            'start_date': start_date.isoformat(),
+                            'end_date': end_date.isoformat()
                         }
                         user_supabase.table('subscriptions').insert(subscription_data).execute()
                         print(f"Created subscription record for user {user_id}")
@@ -310,5 +444,39 @@ def stripe_webhook():
                 print(f"Missing customer_email or plan_name: email={customer_email}, plan={plan_name}")
         except Exception as e:
             print(f"Failed to update user after Stripe payment: {e}")
+    
+    elif event['type'] == 'invoice.payment_succeeded':
+        # Handle subscription renewals
+        invoice = event['data']['object']
+        customer_email = invoice.get('customer_email')
+        subscription_id = invoice.get('subscription')
+        
+        if customer_email and subscription_id:
+            try:
+                # Get subscription details from Stripe
+                subscription = stripe.Subscription.retrieve(subscription_id)
+                plan_name = subscription.metadata.get('plan_id')
+                
+                if plan_name and plan_name in PLANS:
+                    user_supabase = get_supabase_from_request()
+                    
+                    # Update subscription end date
+                    start_date = datetime.utcnow()
+                    if plan_name == 'basic':
+                        end_date = start_date + timedelta(days=30)
+                    elif plan_name == 'premium':
+                        end_date = start_date + timedelta(days=180)
+                    elif plan_name == 'vip':
+                        end_date = start_date + timedelta(days=365)
+                    else:
+                        end_date = start_date
+                    
+                    response = user_supabase.table('users').update({
+                        'subscription_end_date': end_date.isoformat()
+                    }).eq('email', customer_email).execute()
+                    
+                    print(f"Renewed subscription for {customer_email} - plan {plan_name}")
+            except Exception as e:
+                print(f"Failed to process subscription renewal: {e}")
     
     return '', 200 

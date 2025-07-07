@@ -50,39 +50,47 @@ const pricingPlans = [
   {
     name: 'Free',
     price: '$0',
+    period: '3 months only',
     features: [
       'Budgeting & Debt Tracker',
       'Secure account',
       'Basic support',
+      'Data archived after 3 months',
     ]
   },
   {
     name: 'Basic',
-    price: '$5.99',
+    price: '$2.99',
+    period: 'per month',
     features: [
       'Everything in Free',
       'AI Chat & Coaching',
       'Priority support',
+      'Auto-renewal billing',
     ]
   },
   {
     name: 'Premium',
     price: '$9.99',
+    period: 'per 6 months',
     popular: true,
     features: [
       'Everything in Basic',
       'AI Credit Analysis',
       'Score Simulator',
       'Downloadable PDF reports',
+      'Auto-renewal billing',
     ]
   },
   {
     name: 'VIP',
     price: '$19.99',
+    period: 'per 12 months',
     features: [
       'Everything in Premium',
       'Dispute Generator',
       'VIP support',
+      'Auto-renewal billing',
     ]
   }
 ]
@@ -250,7 +258,7 @@ export default function LandingPage() {
                     <span className="text-4xl font-bold text-grit-600">
                       {plan.price}
                     </span>
-                    <span className="text-gray-500 ml-1">/mo</span>
+                    <span className="text-gray-500 ml-1">/{plan.period}</span>
                   </div>
                 </div>
                 

@@ -21,59 +21,70 @@ const Pricing = () => {
     {
       name: 'Free',
       price: '$0',
-      period: 'per month',
-      description: 'Get started with budgeting and debt tracking tools.',
+      period: '3 months only',
+      description: 'Get started with budgeting and debt tracking tools. Limited to 3 months.',
       features: [
         'Budgeting & Debt Tracker',
         'Secure account',
         'Basic support',
+        'Data archived after 3 months',
       ],
       buttonText: 'Get Started',
       buttonVariant: 'outline',
-      popular: false
+      popular: false,
+      autoRenew: false
     },
     {
       name: 'Basic',
-      price: '$5.99',
+      price: '$2.99',
       period: 'per month',
-      description: 'Unlock AI chat and personalized financial coaching.',
+      description: 'Unlock AI chat and personalized financial coaching with auto-renewal.',
       features: [
         'Everything in Free',
         'AI Chat & Coaching',
         'Priority support',
+        'Auto-renewal billing',
+        'Cancel anytime',
       ],
       buttonText: 'Start Basic',
       buttonVariant: 'outline',
-      popular: false
+      popular: false,
+      autoRenew: true
     },
     {
       name: 'Premium',
       price: '$9.99',
-      period: 'per month',
-      description: 'Full AI credit analysis and score simulation.',
+      period: 'per 6 months',
+      description: 'Full AI credit analysis and score simulation with 6-month billing.',
       features: [
         'Everything in Basic',
         'AI Credit Analysis',
         'Score Simulator',
         'Downloadable PDF reports',
+        'Auto-renewal billing',
+        'Cancel anytime',
       ],
       buttonText: 'Start Premium',
       buttonVariant: 'primary',
-      popular: true
+      popular: true,
+      autoRenew: true
     },
     {
       name: 'VIP',
       price: '$19.99',
-      period: 'per month',
-      description: 'All features plus automated dispute generator.',
+      period: 'per 12 months',
+      description: 'All features plus automated dispute generator with annual billing.',
       features: [
         'Everything in Premium',
         'Dispute Generator',
         'VIP support',
+        'Auto-renewal billing',
+        'Cancel anytime',
       ],
       buttonText: 'Go VIP',
       buttonVariant: 'outline',
-      popular: false
+      popular: false,
+      autoRenew: true
     }
   ]
 
@@ -128,7 +139,7 @@ const Pricing = () => {
             Choose Your Plan
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Start with our free plan and upgrade as your needs grow. All plans include our AI-powered credit analysis and dispute assistance.
+            Start with our free plan and upgrade as your needs grow. All paid plans include auto-renewal for your convenience.
           </p>
         </div>
 
@@ -167,6 +178,14 @@ const Pricing = () => {
                   <p className="text-gray-600">
                     {plan.description}
                   </p>
+                  {plan.autoRenew && (
+                    <div className="mt-2">
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <CheckIcon className="w-3 h-3 mr-1" />
+                        Auto-renewal
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <ul className="space-y-4 mb-8">
@@ -212,10 +231,18 @@ const Pricing = () => {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Is my data secure?
+                  What happens to my data after free trial?
                 </h3>
                 <p className="text-gray-600">
-                  Absolutely. We use bank-level encryption and never store your sensitive financial information.
+                  Your data is safely archived and will be restored when you upgrade to a paid plan.
+                </p>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  How does auto-renewal work?
+                </h3>
+                <p className="text-gray-600">
+                  Paid plans automatically renew using your saved payment method. You can cancel anytime.
                 </p>
               </div>
               <div>
@@ -224,14 +251,6 @@ const Pricing = () => {
                 </h3>
                 <p className="text-gray-600">
                   We offer a 30-day money-back guarantee. If you're not satisfied, we'll refund your payment.
-                </p>
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Can I upgrade or downgrade?
-                </h3>
-                <p className="text-gray-600">
-                  Yes, you can change your plan at any time. Changes take effect immediately.
                 </p>
               </div>
             </div>
