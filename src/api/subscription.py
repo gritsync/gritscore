@@ -248,7 +248,7 @@ def get_user_plan(user_id):
     try:
         status = SubscriptionManager.get_subscription_status(user_id)
         plan = status['plan'] if status else 'free'
-        print(f"[DEBUG] get_user_plan: user_id={user_id}, plan={plan}")
+        print(f"[DEBUG] get_user_plan: user_id={user_id}, plan={plan}, status={status}")
         return plan
     except Exception as e:
         print(f"[DEBUG] get_user_plan: user_id={user_id}, EXCEPTION: {e}")
@@ -266,6 +266,7 @@ def basic_required(f):
     def decorated_function(*args, **kwargs):
         user_id = get_jwt_identity()
         plan = get_user_plan(user_id)
+        print(f"[DEBUG] basic_required: user_id={user_id}, plan={plan}")
         if plan in ['basic', 'premium', 'vip']:
             return f(*args, **kwargs)
         return jsonify({'error': 'Basic plan required. Please upgrade.'}), 403
