@@ -80,8 +80,8 @@ export default function Register() {
             setLoadingCheckout(false)
           }
         }
-        toast.success('Account created successfully! Redirecting to dashboard...')
-        navigate('/app')
+        toast.success('Account created successfully! Please check your email to verify your account.')
+        navigate('/verify-email?uid=' + result.user.id)
       } else {
         toast.error(result.error)
       }

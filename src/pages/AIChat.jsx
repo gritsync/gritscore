@@ -6,7 +6,11 @@ import {
   SparklesIcon,
   TrashIcon,
   ChatBubbleLeftRightIcon,
-  UserIcon
+  UserIcon,
+  LightBulbIcon,
+  ChartBarIcon,
+  TrendingUpIcon,
+  ExclamationTriangleIcon
 } from '@heroicons/react/24/outline'
 import { chatAPI } from '../services/api'
 import toast from 'react-hot-toast'
@@ -14,6 +18,9 @@ import toast from 'react-hot-toast'
 export default function AIChat() {
   const [message, setMessage] = useState('')
   const [isTyping, setIsTyping] = useState(false)
+  const [userPreferences, setUserPreferences] = useState({})
+  const [conversationContext, setConversationContext] = useState([])
+  const [learningInsights, setLearningInsights] = useState([])
   const messagesEndRef = useRef(null)
   const queryClient = useQueryClient()
 
@@ -55,6 +62,94 @@ export default function AIChat() {
       }))
     : [];
 
+  // Analyze conversation patterns for learning
+  useEffect(() => {
+    if (transformedChatHistory.length > 0) {
+      analyzeConversationPatterns()
+    }
+  }, [transformedChatHistory])
+
+  const analyzeConversationPatterns = () => {
+    const patterns = {
+      creditScore: 0,
+      budgeting: 0,
+      debt: 0,
+      disputes: 0,
+      investments: 0,
+      savings: 0
+    }
+
+    const keywords = {
+      creditScore: ['credit score', 'fico', 'credit rating', 'score'],
+      budgeting: ['budget', 'spending', 'expenses', 'income'],
+      debt: ['debt', 'loan', 'payment', 'balance'],
+      disputes: ['dispute', 'error', 'wrong', 'incorrect'],
+      investments: ['invest', 'stock', 'portfolio', 'return'],
+      savings: ['save', 'emergency', 'fund', 'goal']
+    }
+
+    transformedChatHistory.forEach(msg => {
+      if (msg.type === 'user') {
+        const lowerMessage = msg.message.toLowerCase()
+        Object.keys(keywords).forEach(category => {
+          keywords[category].forEach(keyword => {
+            if (lowerMessage.includes(keyword)) {
+              patterns[category]++
+            }
+          })
+        })
+      }
+    })
+
+    // Set user preferences based on patterns
+    const topInterests = Object.entries(patterns)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 3)
+      .map(([category]) => category)
+
+    setUserPreferences({
+      interests: topInterests,
+      totalMessages: transformedChatHistory.length,
+      lastActive: new Date()
+    })
+
+    // Generate learning insights
+    generateLearningInsights(patterns)
+  }
+
+  const generateLearningInsights = (patterns) => {
+    const insights = []
+    
+    if (patterns.creditScore > 2) {
+      insights.push({
+        type: 'credit_focus',
+        message: 'You seem focused on credit scores. Consider tracking your score trends over time.',
+        icon: TrendingUpIcon,
+        color: 'text-blue-600'
+      })
+    }
+    
+    if (patterns.budgeting > 2) {
+      insights.push({
+        type: 'budgeting_focus',
+        message: 'Budgeting is a key interest. Let\'s create a personalized budget plan.',
+        icon: ChartBarIcon,
+        color: 'text-green-600'
+      })
+    }
+    
+    if (patterns.debt > 2) {
+      insights.push({
+        type: 'debt_focus',
+        message: 'Debt management is important. I can help create a debt payoff strategy.',
+        icon: ExclamationTriangleIcon,
+        color: 'text-yellow-600'
+      })
+    }
+
+    setLearningInsights(insights)
+  }
+
   // Send message mutation
   const sendMessageMutation = useMutation(
     (messageText) => chatAPI.sendMessage(messageText),
@@ -64,6 +159,13 @@ export default function AIChat() {
         setIsTyping(false)
         console.log('Message sent successfully:', response)
         toast.success('Message sent successfully!')
+        
+        // Update conversation context
+        setConversationContext(prev => [...prev, {
+          role: 'user',
+          content: messageText,
+          timestamp: new Date()
+        }])
       },
       onError: (error) => {
         console.error('Failed to send message:', error)
@@ -80,6 +182,9 @@ export default function AIChat() {
     {
       onSuccess: () => {
         queryClient.invalidateQueries(['chat-history'])
+        setConversationContext([])
+        setLearningInsights([])
+        setUserPreferences({})
         toast.success('Chat history cleared')
       },
       onError: (error) => {
@@ -111,33 +216,54 @@ export default function AIChat() {
     sendMessageMutation.mutate(messageText)
   }
 
-  // Quick action buttons
-  const quickActions = [
-    {
-      text: "Analyze my spending patterns",
-      icon: "📊"
-    },
-    {
-      text: "Help me create a budget plan",
-      icon: "💰"
-    },
-    {
-      text: "How can I improve my credit score?",
-      icon: "📈"
-    },
-    {
-      text: "Give me debt payoff advice",
-      icon: "💳"
-    },
-    {
-      text: "What's my financial summary?",
-      icon: "📋"
-    },
-    {
-      text: "Suggest ways to save money",
-      icon: "💡"
+  // Get personalized quick actions based on user preferences
+  const getPersonalizedQuickActions = () => {
+    const baseActions = [
+      {
+        text: "Analyze my spending patterns",
+        icon: "📊",
+        category: "budgeting"
+      },
+      {
+        text: "Help me create a budget plan",
+        icon: "💰",
+        category: "budgeting"
+      },
+      {
+        text: "How can I improve my credit score?",
+        icon: "📈",
+        category: "creditScore"
+      },
+      {
+        text: "Give me debt payoff advice",
+        icon: "💳",
+        category: "debt"
+      },
+      {
+        text: "What's my financial summary?",
+        icon: "📋",
+        category: "general"
+      },
+      {
+        text: "Suggest ways to save money",
+        icon: "💡",
+        category: "savings"
+      }
+    ]
+
+    // Prioritize actions based on user interests
+    if (userPreferences.interests) {
+      return baseActions.sort((a, b) => {
+        const aPriority = userPreferences.interests.includes(a.category) ? 1 : 0
+        const bPriority = userPreferences.interests.includes(b.category) ? 1 : 0
+        return bPriority - aPriority
+      })
     }
-  ]
+
+    return baseActions
+  }
+
+  const quickActions = getPersonalizedQuickActions()
 
   const formatTime = (timestamp) => {
     return new Date(timestamp).toLocaleTimeString([], { 
@@ -172,6 +298,18 @@ export default function AIChat() {
               )}
             </div>
           )}
+          
+          {/* Learning Insights */}
+          {learningInsights.length > 0 && (
+            <div className="mt-3 space-y-2">
+              {learningInsights.map((insight, index) => (
+                <div key={index} className="flex items-center text-xs bg-blue-50 text-blue-700 px-3 py-2 rounded-lg">
+                  <LightBulbIcon className="w-4 h-4 mr-2" />
+                  <span>{insight.message}</span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         <button
           onClick={() => clearHistoryMutation.mutate()}
@@ -201,6 +339,20 @@ export default function AIChat() {
                   : "Ask me anything about your credit, budgeting, or financial goals. Add some transactions or debts for personalized advice."
                 }
               </p>
+              
+              {/* Personalized welcome based on user preferences */}
+              {userPreferences.interests && userPreferences.interests.length > 0 && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                  <h4 className="font-medium text-blue-900 mb-2">Based on your interests:</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {userPreferences.interests.map((interest, index) => (
+                      <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                        {interest.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
           {historyError && (
@@ -292,10 +444,12 @@ export default function AIChat() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Quick Actions */}
+        {/* Personalized Quick Actions */}
         {transformedChatHistory.length === 0 && !isLoadingHistory && (
           <div className="p-6 border-t border-gray-200">
-            <h3 className="text-sm font-medium text-gray-900 mb-3">Quick Actions</h3>
+            <h3 className="text-sm font-medium text-gray-900 mb-3">
+              {userPreferences.interests ? 'Personalized Suggestions' : 'Quick Actions'}
+            </h3>
             <div className="grid grid-cols-2 gap-2">
               {quickActions.map((action, index) => (
                 <button
@@ -311,10 +465,15 @@ export default function AIChat() {
                       }
                     }, 100)
                   }}
-                  className="p-3 text-left border border-gray-200 rounded-lg hover:border-grit-300 hover:bg-grit-50 transition-colors"
+                  className={`p-3 text-left border border-gray-200 rounded-lg hover:border-grit-300 hover:bg-grit-50 transition-colors ${
+                    userPreferences.interests?.includes(action.category) ? 'border-grit-300 bg-grit-50' : ''
+                  }`}
                 >
                   <div className="text-lg mb-1">{action.icon}</div>
                   <div className="text-sm text-gray-700">{action.text}</div>
+                  {userPreferences.interests?.includes(action.category) && (
+                    <div className="text-xs text-grit-600 mt-1">Based on your interests</div>
+                  )}
                 </button>
               ))}
             </div>
@@ -343,7 +502,7 @@ export default function AIChat() {
             </button>
           </form>
           <p className="text-xs text-gray-500 mt-2">
-            Powered by GPT-4.1 • Your conversations are private and secure
+            Powered by GPT-4.1 • Your conversations are private and secure • AI learns from your patterns
           </p>
         </div>
       </div>

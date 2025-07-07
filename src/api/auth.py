@@ -265,4 +265,79 @@ def forgot_password():
         email_service.send_password_reset(email, user.get('preferred_name') or user.get('full_name') or email, reset_link)
         return jsonify({'message': 'Password reset email sent. Please check your inbox.'}), 200
     except Exception as e:
-        return jsonify({'message': f'Failed to send password reset email: {str(e)}'}), 500 
+        return jsonify({'message': f'Failed to send password reset email: {str(e)}'}), 500
+
+@auth_bp.route('/verify-email', methods=['POST'])
+def verify_email():
+    data = request.get_json()
+    token = data.get('token')  # This is actually the user_id in our simple implementation
+    
+    if not token:
+        return jsonify({'message': 'Verification token is required'}), 400
+    
+    try:
+        # In our simple implementation, the token is the user_id
+        user_id = token
+        
+        # Update user's email_verified status
+        response = supabase.table('users').update({'email_verified': True}).eq('id', user_id).execute()
+        
+        if not response.data:
+            return jsonify({'message': 'Invalid verification token'}), 400
+        
+        user = response.data[0]
+        
+        # Create access token for automatic login
+        access_token = create_access_token(identity=user['id'], additional_claims={'subscription_plan': user.get('subscription_plan', 'Free')})
+        
+        return jsonify({
+            'message': 'Email verified successfully!',
+            'token': access_token,
+            'user': {
+                'id': user['id'],
+                'email': user['email'],
+                'first_name': user.get('first_name', ''),
+                'middle_name': user.get('middle_name', ''),
+                'last_name': user.get('last_name', ''),
+                'full_name': user.get('full_name', ''),
+                'preferred_name': user.get('preferred_name', ''),
+                'subscription': {'plan': user.get('subscription_plan', 'Free')}
+            }
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'message': f'Verification failed: {str(e)}'}), 500
+
+@auth_bp.route('/resend-verification', methods=['POST'])
+def resend_verification():
+    data = request.get_json()
+    email = data.get('email')
+    
+    if not email:
+        return jsonify({'message': 'Email is required'}), 400
+    
+    try:
+        # Find user by email
+        response = supabase.table('users').select('*').eq('email', email).single().execute()
+        user = response.data
+        
+        if not user:
+            return jsonify({'message': 'No user found with that email'}), 404
+        
+        if user.get('email_verified'):
+            return jsonify({'message': 'Email is already verified'}), 400
+        
+        # Generate verification link
+        verification_link = f"{current_app.config.get('APP_URL', 'https://gritscore.vercel.app')}/verify-email?uid={user['id']}"
+        
+        # Send verification email
+        email_service.send_verification_email(
+            email, 
+            user.get('preferred_name') or user.get('full_name') or email, 
+            verification_link
+        )
+        
+        return jsonify({'message': 'Verification email sent successfully'}), 200
+        
+    except Exception as e:
+        return jsonify({'message': f'Failed to resend verification email: {str(e)}'}), 500 

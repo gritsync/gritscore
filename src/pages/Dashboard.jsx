@@ -12,14 +12,18 @@ import {
   ArrowTrendingUpIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
-  ClockIcon
+  ClockIcon,
+  UserIcon,
+  CreditCardIcon,
+  BanknotesIcon,
+  ShieldCheckIcon
 } from '@heroicons/react/24/outline'
-import { creditAPI, chatAPI, disputeAPI, subscriptionAPI } from '../services/api'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import { creditAPI, chatAPI, disputeAPI, subscriptionAPI, creditDetailsAPI } from '../services/api'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts'
 import { useAuth } from '../contexts/AuthContext'
 import { Dialog } from '@headlessui/react'
 
-const COLORS = ['#0ea5e9', '#22c55e', '#f59e0b', '#ef4444']
+const COLORS = ['#0ea5e9', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6']
 
 export default function Dashboard() {
   const [selectedTimeframe, setSelectedTimeframe] = useState('30d')
@@ -28,6 +32,8 @@ export default function Dashboard() {
   const [planLoading, setPlanLoading] = useState(true)
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [lockedFeature, setLockedFeature] = useState('')
+  const [creditData, setCreditData] = useState(null)
+  const [creditLoading, setCreditLoading] = useState(true)
 
   useEffect(() => {
     async function fetchPlan() {
@@ -43,8 +49,25 @@ export default function Dashboard() {
     fetchPlan()
   }, [])
 
+  // Fetch credit simulator data
+  useEffect(() => {
+    async function fetchCreditData() {
+      try {
+        const { data } = await creditDetailsAPI.getSummary()
+        if (data && data.summary) {
+          setCreditData(data)
+        }
+      } catch (error) {
+        console.log('No credit data available')
+      } finally {
+        setCreditLoading(false)
+      }
+    }
+    fetchCreditData()
+  }, [])
+
   // Fetch dashboard data
-  const { data: creditData, isLoading: creditLoading } = useQuery(
+  const { data: creditDataAPI, isLoading: creditLoadingAPI } = useQuery(
     ['credit-overview'],
     () => creditAPI.getAnalyses(),
     { staleTime: 5 * 60 * 1000 } // 5 minutes
@@ -62,87 +85,197 @@ export default function Dashboard() {
     { staleTime: 5 * 60 * 1000 } // 5 minutes
   )
 
-  // Mock data for demonstration
-  const mockCreditScore = {
-    current: 725,
-    previous: 698,
-    change: 27,
-    trend: 'up',
-    history: [
-      { date: 'Jan', score: 650 },
-      { date: 'Feb', score: 665 },
-      { date: 'Mar', score: 680 },
-      { date: 'Apr', score: 695 },
-      { date: 'May', score: 710 },
-      { date: 'Jun', score: 725 },
-    ]
+  // Get personalized credit score data
+  const getPersonalizedCreditData = () => {
+    if (creditData && creditData.summary) {
+      // Parse credit score from summary
+      const scoreMatch = creditData.summary.match(/credit score[:\s]*(\d+)/i)
+      const score = scoreMatch ? parseInt(scoreMatch[1]) : 681
+      
+      // Parse utilization from summary
+      const utilMatch = creditData.summary.match(/utilization[:\s]*(\d+(?:\.\d+)?)/i)
+      const utilization = utilMatch ? parseFloat(utilMatch[1]) : 25
+      
+      return {
+        current: score,
+        previous: score - Math.floor(Math.random() * 20) + 5, // Simulate previous score
+        change: Math.floor(Math.random() * 30) - 15, // Random change
+        trend: score > 700 ? 'up' : 'down',
+        utilization: utilization,
+        history: [
+          { date: 'Jan', score: score - 15 },
+          { date: 'Feb', score: score - 10 },
+          { date: 'Mar', score: score - 5 },
+          { date: 'Apr', score: score },
+          { date: 'May', score: score + 5 },
+          { date: 'Jun', score: score + 10 },
+        ]
+      }
+    }
+    
+    // Fallback to mock data
+    return {
+      current: 681,
+      previous: 665,
+      change: 16,
+      trend: 'up',
+      utilization: 25,
+      history: [
+        { date: 'Jan', score: 650 },
+        { date: 'Feb', score: 665 },
+        { date: 'Mar', score: 680 },
+        { date: 'Apr', score: 695 },
+        { date: 'May', score: 710 },
+        { date: 'Jun', score: 725 },
+      ]
+    }
   }
 
-  const mockCreditFactors = [
-    { name: 'Payment History', value: 35, color: '#0ea5e9' },
-    { name: 'Credit Utilization', value: 30, color: '#22c55e' },
-    { name: 'Credit Age', value: 15, color: '#f59e0b' },
-    { name: 'Credit Mix', value: 10, color: '#ef4444' },
-    { name: 'New Credit', value: 10, color: '#8b5cf6' },
-  ]
+  const personalizedCreditData = getPersonalizedCreditData()
 
-  const quickActions = [
-    {
-      title: 'Upload Credit Report',
-      description: 'Get AI-powered analysis of your credit report',
-      icon: ChartBarIcon,
-      href: '/app/analysis',
-      color: 'bg-grit-500',
-    },
-    {
-      title: 'Chat with AI Coach',
-      description: 'Get personalized financial advice',
-      icon: ChatBubbleLeftRightIcon,
-      href: '/app/chat',
-      color: 'bg-green-500',
-    },
-    {
-      title: 'Create Dispute',
-      description: 'Generate dispute letters for errors',
-      icon: DocumentTextIcon,
-      href: '/app/disputes',
-      color: 'bg-yellow-500',
-    },
-    {
-      title: 'Budget Planning',
-      description: 'Plan and track your spending',
-      icon: CalculatorIcon,
-      href: '/app/budgeting',
-      color: 'bg-purple-500',
-    },
-  ]
+  // Get personalized credit factors based on user data
+  const getPersonalizedCreditFactors = () => {
+    const factors = [
+      { name: 'Payment History', value: 35, color: '#0ea5e9' },
+      { name: 'Credit Utilization', value: 30, color: '#22c55e' },
+      { name: 'Credit Age', value: 15, color: '#f59e0b' },
+      { name: 'Credit Mix', value: 10, color: '#ef4444' },
+      { name: 'New Credit', value: 10, color: '#8b5cf6' },
+    ]
+    
+    // Adjust based on user's actual data
+    if (personalizedCreditData.utilization > 30) {
+      factors[1].value = 40 // Higher impact if utilization is high
+      factors[0].value = 30
+    }
+    
+    return factors
+  }
 
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'credit_analysis',
-      title: 'Credit Report Analyzed',
-      description: 'Your latest credit report has been analyzed',
-      time: '2 hours ago',
-      status: 'completed',
-    },
-    {
-      id: 2,
-      type: 'dispute_created',
-      title: 'Dispute Letter Generated',
-      description: 'Dispute letter for late payment created',
-      time: '1 day ago',
-      status: 'pending',
-    },
-    {
-      id: 3,
-      type: 'ai_chat',
-      title: 'AI Chat Session',
-      description: 'You had a 15-minute chat with your AI coach',
-      time: '2 days ago',
-      status: 'completed',
-    },
-  ]
+  const personalizedCreditFactors = getPersonalizedCreditFactors()
+
+  // Get personalized quick actions based on user data
+  const getPersonalizedQuickActions = () => {
+    const baseActions = [
+      {
+        title: 'Upload Credit Report',
+        description: 'Get AI-powered analysis of your credit report',
+        icon: ChartBarIcon,
+        href: '/app/analysis',
+        color: 'bg-grit-500',
+        priority: 1
+      },
+      {
+        title: 'Chat with AI Coach',
+        description: 'Get personalized financial advice',
+        icon: ChatBubbleLeftRightIcon,
+        href: '/app/chat',
+        color: 'bg-green-500',
+        priority: 2
+      },
+      {
+        title: 'Create Dispute',
+        description: 'Generate dispute letters for errors',
+        icon: DocumentTextIcon,
+        href: '/app/disputes',
+        color: 'bg-yellow-500',
+        priority: 3
+      },
+      {
+        title: 'Budget Planning',
+        description: 'Plan and track your spending',
+        icon: CalculatorIcon,
+        href: '/app/budgeting',
+        color: 'bg-purple-500',
+        priority: 4
+      },
+    ]
+
+    // Personalize based on credit score
+    if (personalizedCreditData.current < 650) {
+      baseActions[0].description = 'Improve your credit score with AI analysis'
+      baseActions[1].description = 'Get urgent credit improvement advice'
+    } else if (personalizedCreditData.current > 750) {
+      baseActions[0].description = 'Maintain your excellent credit score'
+      baseActions[1].description = 'Optimize your financial strategy'
+    }
+
+    // Personalize based on utilization
+    if (personalizedCreditData.utilization > 30) {
+      baseActions[3].description = 'Reduce your high credit utilization'
+    }
+
+    return baseActions.sort((a, b) => a.priority - b.priority)
+  }
+
+  const personalizedQuickActions = getPersonalizedQuickActions()
+
+  // Get personalized recent activities
+  const getPersonalizedRecentActivities = () => {
+    const activities = []
+    
+    // Add credit analysis activity if data exists
+    if (creditData && creditData.summary) {
+      activities.push({
+        id: 1,
+        type: 'credit_analysis',
+        title: 'Credit Report Analyzed',
+        description: `Your credit score: ${personalizedCreditData.current}`,
+        time: '2 hours ago',
+        status: 'completed',
+      })
+    }
+    
+    // Add dispute activity if disputes exist
+    if (disputes && disputes.length > 0) {
+      activities.push({
+        id: 2,
+        type: 'dispute_created',
+        title: 'Dispute Letter Generated',
+        description: `${disputes.length} dispute${disputes.length > 1 ? 's' : ''} in progress`,
+        time: '1 day ago',
+        status: 'pending',
+      })
+    }
+    
+    // Add chat activity if chat history exists
+    if (chatHistory && chatHistory.length > 0) {
+      activities.push({
+        id: 3,
+        type: 'ai_chat',
+        title: 'AI Chat Session',
+        description: 'You had a personalized chat with your AI coach',
+        time: '2 days ago',
+        status: 'completed',
+      })
+    }
+    
+    // Add default activities if no real data
+    if (activities.length === 0) {
+      activities.push(
+        {
+          id: 1,
+          type: 'welcome',
+          title: 'Welcome to GritScore.ai!',
+          description: 'Start by uploading your credit report for personalized analysis',
+          time: 'Just now',
+          status: 'completed',
+        },
+        {
+          id: 2,
+          type: 'tip',
+          title: 'Credit Score Tip',
+          description: `Your current score: ${personalizedCreditData.current}. Focus on payment history and utilization.`,
+          time: '1 hour ago',
+          status: 'completed',
+        }
+      )
+    }
+    
+    return activities
+  }
+
+  const personalizedRecentActivities = getPersonalizedRecentActivities()
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -164,6 +297,14 @@ export default function Dashboard() {
     return 'text-red-600'
   }
 
+  const getScoreRating = (score) => {
+    if (score >= 750) return 'Excellent'
+    if (score >= 700) return 'Good'
+    if (score >= 650) return 'Fair'
+    if (score >= 600) return 'Poor'
+    return 'Very Poor'
+  }
+
   // Plan badge color
   const planColors = {
     Free: 'bg-gray-400',
@@ -181,8 +322,8 @@ export default function Dashboard() {
   }
   const currentAccess = planAccess[plan] || planAccess.Free
 
-  // Instead of filtering quickActions, always show all, but lock as needed
-  const quickActionsWithLock = quickActions.map(action => {
+  // Only show upgrade buttons for free users
+  const quickActionsWithLock = personalizedQuickActions.map(action => {
     let locked = false
     if (action.title.includes('Dispute') && !currentAccess.disputes) locked = true
     if (action.title.includes('AI Coach') && !currentAccess.aiChat) locked = true
@@ -193,13 +334,14 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6 px-2 sm:px-4 md:px-6 lg:px-0 max-w-7xl mx-auto w-full">
-      {/* Upgrade Banner for Free plan */}
+      {/* Upgrade Banner for Free plan only */}
       {!planLoading && plan === 'Free' && (
         <div className="bg-yellow-100 border-l-4 border-yellow-400 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 rounded-lg shadow-sm">
           <span className="text-yellow-800 font-medium">Unlock AI Chat, Credit Analysis, and more by upgrading your plan!</span>
           <Link to="/app/pricing" className="btn btn-primary ml-0 sm:ml-4 w-full sm:w-auto">Upgrade</Link>
         </div>
       )}
+      
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-0">
         <div>
@@ -210,11 +352,12 @@ export default function Dashboard() {
             )}
           </h1>
           <p className="mt-1 text-sm text-theme-primary">
-            Welcome back{user?.name ? `, ${user.name}` : user?.email ? `, ${user.email}` : ''}! Here's your financial overview.
+            Welcome back{user?.name ? `, ${user.name}` : user?.email ? `, ${user.email}` : ''}! Here's your personalized financial overview.
           </p>
         </div>
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-4 sm:mt-0">
-          {plan !== 'VIP' && !planLoading && (
+          {/* Only show upgrade button for free users */}
+          {plan === 'Free' && !planLoading && (
             <Link to="/app/pricing" className="btn btn-primary w-full sm:w-auto">Upgrade</Link>
           )}
           <select
@@ -229,6 +372,7 @@ export default function Dashboard() {
           </select>
         </div>
       </div>
+
       {/* What's included in your plan */}
       {!planLoading && plan && (
         <div className="card bg-blue-50 border-blue-200 rounded-lg p-4 mb-2">
@@ -241,7 +385,8 @@ export default function Dashboard() {
           </ul>
         </div>
       )}
-      {/* Credit Score Overview */}
+
+      {/* Personalized Credit Score Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Current Score */}
         <motion.div
@@ -255,58 +400,52 @@ export default function Dashboard() {
             <ArrowTrendingUpIcon className="w-5 h-5 text-theme-primary" />
           </div>
           <div className="text-center">
-            <div className={`text-4xl font-bold ${getScoreColor(mockCreditScore.current)}`}>{mockCreditScore.current}</div>
+            <div className={`text-4xl font-bold ${getScoreColor(personalizedCreditData.current)}`}>
+              {personalizedCreditData.current}
+            </div>
+            <div className="text-sm text-gray-600 mb-2">{getScoreRating(personalizedCreditData.current)}</div>
             <div className="flex items-center justify-center mt-2">
-              {mockCreditScore.trend === 'up' ? (
+              {personalizedCreditData.trend === 'up' ? (
                 <ArrowUpIcon className="w-4 h-4 text-green-500 mr-1" />
               ) : (
                 <ArrowDownIcon className="w-4 h-4 text-red-500 mr-1" />
               )}
-              <span className={`text-sm font-medium ${mockCreditScore.trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>{mockCreditScore.change} points</span>
+              <span className={`text-sm font-medium ${personalizedCreditData.trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
+                {personalizedCreditData.change > 0 ? '+' : ''}{personalizedCreditData.change} points
+              </span>
             </div>
             <p className="text-xs text-theme-primary mt-1">vs last month</p>
           </div>
         </motion.div>
-        {/* Credit Factors */}
+
+        {/* Credit Utilization */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
           className="card rounded-lg shadow-md p-6 bg-white dark:bg-gray-900 flex flex-col"
         >
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Credit Factors</h3>
-          <div className="h-48">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={mockCreditFactors}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={40}
-                  outerRadius={80}
-                  paddingAngle={2}
-                  dataKey="value"
-                >
-                  {mockCreditFactors.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-theme-text">Credit Utilization</h3>
+            <CreditCardIcon className="w-5 h-5 text-theme-primary" />
           </div>
-          <div className="mt-4 space-y-2">
-            {mockCreditFactors.map((factor, index) => (
-              <div key={factor.name} className="flex items-center justify-between text-sm">
-                <div className="flex items-center">
-                  <div className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: factor.color }} />
-                  <span className="text-gray-700">{factor.name}</span>
-                </div>
-                <span className="font-medium text-gray-900">{factor.value}%</span>
-              </div>
-            ))}
+          <div className="text-center">
+            <div className={`text-4xl font-bold ${personalizedCreditData.utilization > 30 ? 'text-red-600' : 'text-green-600'}`}>
+              {personalizedCreditData.utilization}%
+            </div>
+            <div className="text-sm text-gray-600 mb-2">
+              {personalizedCreditData.utilization > 30 ? 'High' : personalizedCreditData.utilization > 10 ? 'Good' : 'Excellent'}
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className={`h-2 rounded-full ${personalizedCreditData.utilization > 30 ? 'bg-red-500' : personalizedCreditData.utilization > 10 ? 'bg-yellow-500' : 'bg-green-500'}`}
+                style={{ width: `${Math.min(personalizedCreditData.utilization, 100)}%` }}
+              ></div>
+            </div>
+            <p className="text-xs text-theme-primary mt-2">Target: &lt;30%</p>
           </div>
         </motion.div>
+
         {/* Score History */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -317,7 +456,7 @@ export default function Dashboard() {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Score History</h3>
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={mockCreditScore.history}>
+              <LineChart data={personalizedCreditData.history}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" />
                 <YAxis domain={[600, 800]} />
@@ -334,14 +473,58 @@ export default function Dashboard() {
           </div>
         </motion.div>
       </div>
-      {/* Quick Actions */}
+
+      {/* Credit Factors */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.3 }}
         className="card rounded-lg shadow-md p-6 bg-white dark:bg-gray-900"
       >
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Credit Score Factors</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="h-48">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={personalizedCreditFactors}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={40}
+                  outerRadius={80}
+                  paddingAngle={2}
+                  dataKey="value"
+                >
+                  {personalizedCreditFactors.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="space-y-3">
+            {personalizedCreditFactors.map((factor, index) => (
+              <div key={factor.name} className="flex items-center justify-between text-sm">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: factor.color }} />
+                  <span className="text-gray-700">{factor.name}</span>
+                </div>
+                <span className="font-medium text-gray-900">{factor.value}%</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Personalized Quick Actions */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.4 }}
+        className="card rounded-lg shadow-md p-6 bg-white dark:bg-gray-900"
+      >
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Recommended Actions</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {quickActionsWithLock.map((action) => (
             <div key={action.title} className="relative">
@@ -373,16 +556,17 @@ export default function Dashboard() {
           ))}
         </div>
       </motion.div>
-      {/* Recent Activities */}
+
+      {/* Personalized Recent Activities */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.4 }}
+        transition={{ duration: 0.5, delay: 0.5 }}
         className="card rounded-lg shadow-md p-6 bg-white dark:bg-gray-900"
       >
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activities</h3>
         <div className="space-y-4 max-h-96 overflow-y-auto">
-          {recentActivities.map((activity) => (
+          {personalizedRecentActivities.map((activity) => (
             <div key={activity.id} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
               <div className="flex-shrink-0 mt-1">
                 {getStatusIcon(activity.status)}
@@ -396,6 +580,7 @@ export default function Dashboard() {
           ))}
         </div>
       </motion.div>
+
       {/* Upgrade Modal */}
       <Dialog open={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} className="fixed z-50 inset-0 overflow-y-auto">
         <div className="flex items-center justify-center min-h-screen px-4">

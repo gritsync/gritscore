@@ -14,15 +14,15 @@ export default function VerifyEmail() {
   const [email, setEmail] = useState('')
   const [isResending, setIsResending] = useState(false)
 
-  const token = searchParams.get('token')
+  const uid = searchParams.get('uid')
 
   useEffect(() => {
-    if (token) {
-      verifyEmail(token)
+    if (uid) {
+      verifyEmail(uid)
     } else {
       setStatus('error')
     }
-  }, [token])
+  }, [uid])
 
   const verifyEmail = async (verificationToken) => {
     try {

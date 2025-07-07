@@ -196,7 +196,7 @@ export default function Layout() {
       
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 border-r shadow-xl transition-transform duration-300 ease-in-out transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
+        className={`fixed inset-y-0 left-0 z-50 w-64 border-r shadow-xl transition-transform duration-300 ease-in-out transform flex flex-col ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
         style={{ backgroundColor: theme.surface, borderColor: theme.border }}
         aria-label="Sidebar"
       >
@@ -217,14 +217,13 @@ export default function Layout() {
           </button>
         </div>
 
-        {/* Navigation */}
+        {/* Navigation (scrollable) */}
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto h-[calc(100vh-8rem)]">
           <div className="mb-6">
             <h3 className="px-3 text-xs font-semibold uppercase tracking-wider" style={{ color: theme.primary[500] }}>
               Main Navigation
             </h3>
           </div>
-          
           {filteredNavigation.map((item) => {
             const isActive = location.pathname === item.href
             return (
@@ -253,7 +252,7 @@ export default function Layout() {
           })}
         </nav>
 
-        {/* Sidebar Footer */}
+        {/* Sidebar Footer (fixed at bottom) */}
         <div className="border-t p-4" style={{ borderColor: theme.border, backgroundColor: theme.surface }}>
           <div className="flex items-center space-x-3 mb-4">
             <div className={`w-8 h-8 bg-gradient-to-r ${gradientColors} rounded-full flex items-center justify-center`}>
@@ -268,7 +267,6 @@ export default function Layout() {
               </p>
             </div>
           </div>
-          
           <button
             onClick={handleLogout}
             className="w-full flex items-center px-3 py-2 mt-2 text-sm font-medium rounded-lg transition-colors duration-200 hover:bg-opacity-10"
