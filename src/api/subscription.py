@@ -4,6 +4,7 @@ import stripe
 import json
 from src.services.supabase_client import supabase, get_supabase_from_request
 import functools
+from src.services.email_service import email_service
 # TODO: Refactor this module to use Supabase client instead of SQLAlchemy.
 
 # Stripe key is set in app.py from environment variables
@@ -83,6 +84,9 @@ def create_checkout_session():
         print(f"Creating checkout session for plan: {plan_id}")
         print(f"Plan details: {plan}")
         
+        # Get the current domain from environment or request
+        current_domain = current_app.config.get('APP_URL', 'https://gritscore.vercel.app')
+        
         checkout_session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             line_items=[{
@@ -97,8 +101,8 @@ def create_checkout_session():
                 'quantity': 1,
             }],
             mode='payment',
-            success_url=f'http://localhost:5173/payment-success?success=true&plan={plan_id}',
-            cancel_url='http://localhost:5173/payment-success?canceled=true',
+            success_url=f'{current_domain}/payment-success?success=true&plan={plan_id}',
+            cancel_url=f'{current_domain}/payment-success?canceled=true',
             metadata={
                 'plan_id': plan_id,
                 'plan_name': plan['name']
@@ -279,7 +283,14 @@ def stripe_webhook():
                 user_supabase = get_supabase_from_request()
                 response = user_supabase.table('users').update({'subscription_plan': plan_name}).eq('email', customer_email).execute()
                 print(f"Updated {customer_email} to plan {plan_name}")
-                
+                # Send payment confirmation email via Mailjet
+                plan = PLANS.get(plan_name, {})
+                email_service.send_payment_confirmation(
+                    customer_email,
+                    customer_email.split('@')[0],
+                    plan.get('price', 0) / 100.0,
+                    plan.get('name', plan_name)
+                )
                 # Also create a record in the subscriptions table for tracking
                 try:
                     user_response = user_supabase.table('users').select('id').eq('email', customer_email).single().execute()

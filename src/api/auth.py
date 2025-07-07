@@ -48,14 +48,20 @@ def register():
         'preferred_name': preferred_name,
         'password_hash': password_hash,
         'subscription_plan': 'Free',
-        'email_verified': True  # For demo, auto-verified
+        'email_verified': False
     }
     try:
         # Use base client for user registration (this should be allowed by RLS)
         supabase.table('users').insert(insert_data).execute()
+        # Generate a verification link (for demo, just a dummy link with user_id)
+        verification_link = f"{current_app.config.get('APP_URL', 'https://gritscore.vercel.app')}/verify-email?uid={user_id}"
+        # Send verification email via Mailjet
+        email_service.send_verification_email(email, preferred_name or full_name or email, verification_link)
+        # Send welcome email via Mailjet
+        email_service.send_welcome_email(email, preferred_name or full_name or email)
         access_token = create_access_token(identity=user_id, additional_claims={'subscription_plan': insert_data.get('subscription_plan', 'Free')})
         return jsonify({
-            'message': 'Registration successful!',
+            'message': 'Registration successful! Please check your email to verify your account.',
             'token': access_token,
             'user': {
                 'id': user_id,
@@ -240,4 +246,23 @@ def test_jwt_protected():
         'message': 'JWT protected endpoint working!',
         'email': email,
         'headers': dict(request.headers)
-    }), 200 
+    }), 200
+
+@auth_bp.route('/forgot-password', methods=['POST'])
+def forgot_password():
+    data = request.get_json()
+    email = data.get('email')
+    if not email:
+        return jsonify({'message': 'Email is required'}), 400
+    try:
+        response = supabase.table('users').select('*').eq('email', email).single().execute()
+        user = response.data
+        if not user:
+            return jsonify({'message': 'No user found with that email'}), 404
+        # Generate a reset link (for demo, just a dummy link with user_id)
+        reset_link = f"{current_app.config.get('APP_URL', 'https://gritscore.vercel.app')}/reset-password?uid={user['id']}"
+        # Send password reset email via Mailjet
+        email_service.send_password_reset(email, user.get('preferred_name') or user.get('full_name') or email, reset_link)
+        return jsonify({'message': 'Password reset email sent. Please check your inbox.'}), 200
+    except Exception as e:
+        return jsonify({'message': f'Failed to send password reset email: {str(e)}'}), 500 

@@ -63,7 +63,7 @@ def create_app():
     # Stripe configuration
     stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
 
-    YOUR_DOMAIN = os.environ.get('APP_URL', 'http://127.0.0.1:5000')
+    YOUR_DOMAIN = os.environ.get('APP_URL', 'https://gritscore.vercel.app')
 
     # --- API Blueprint Registration ---
     from src.api.auth import auth_bp

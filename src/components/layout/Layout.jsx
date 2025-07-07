@@ -187,105 +187,132 @@ export default function Layout() {
   const filteredNavigation = navigation.filter(item => item.always || currentAccess[item.access])
 
   return (
-    <div className="min-h-screen bg-theme-background flex flex-col lg:flex-row">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
       {/* Mobile sidebar overlay */}
-      <div className={`fixed inset-0 z-40 bg-black bg-opacity-40 transition-opacity duration-300 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`} onClick={() => setSidebarOpen(false)} aria-hidden={!sidebarOpen} />
+      <div className={`fixed inset-0 z-40 bg-black bg-opacity-50 transition-opacity duration-300 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`} onClick={() => setSidebarOpen(false)} aria-hidden={!sidebarOpen} />
+      
       {/* Sidebar */}
       <aside
-        className={`sidebar z-50 bg-white dark:bg-gray-900 shadow-lg transition-transform duration-300 flex flex-col w-64 max-w-full h-full
-        fixed inset-y-0 left-0 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:static lg:inset-0 lg:translate-x-0 lg:flex lg:w-40 lg:max-w-xs`}
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-xl transition-transform duration-300 ease-in-out transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:static lg:translate-x-0 lg:shadow-none`}
         aria-label="Sidebar"
       >
-        <div className="flex h-16 items-center px-6 justify-between lg:justify-start">
-          <div className="flex items-center space-x-2">
-            <img src="/gritscore.png" alt="GritScore.ai" className="h-10 w-auto" />
-            <span className="font-extrabold text-lg text-theme-primary tracking-tight select-none hidden sm:inline">GritScore</span>
+        {/* Sidebar Header */}
+        <div className="flex h-16 items-center justify-between px-6 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center space-x-3">
+            <img src="/gritscore.png" alt="GritScore.ai" className="h-8 w-8" />
+            <span className="font-bold text-xl text-gray-900 dark:text-white">GritScore</span>
           </div>
           {/* Close button for mobile */}
-          <button className="lg:hidden p-2.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-theme-primary" onClick={() => setSidebarOpen(false)} aria-label="Close sidebar">
-            <XMarkIcon className="w-6 h-6 text-gray-700 dark:text-gray-200" />
+          <button 
+            className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+            onClick={() => setSidebarOpen(false)} 
+            aria-label="Close sidebar"
+          >
+            <XMarkIcon className="w-5 h-5" />
           </button>
         </div>
-        <nav className="flex-1 space-y-1 px-4 py-4 overflow-y-auto">
+
+        {/* Navigation */}
+        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+          <div className="mb-6">
+            <h3 className="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+              Main Navigation
+            </h3>
+          </div>
+          
           {filteredNavigation.map((item) => {
             const isActive = location.pathname === item.href
             return (
               <Link
                 key={item.name}
                 to={item.href}
-                className={`nav-item group flex items-center px-3 py-2 rounded-lg transition-colors duration-150 ${isActive ? 'bg-theme-primary text-white' : 'text-theme-text hover:bg-gray-100 dark:hover:bg-gray-800'}`}
-                onClick={() => setSidebarOpen(false)} // close sidebar on mobile nav
+                className={`group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
+                  isActive 
+                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-r-2 border-blue-600' 
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
+                }`}
+                onClick={() => setSidebarOpen(false)}
                 tabIndex={sidebarOpen || window.innerWidth >= 1024 ? 0 : -1}
               >
-                <item.icon className="w-5 h-5 mr-3" />
+                <item.icon className={`w-5 h-5 mr-3 flex-shrink-0 ${
+                  isActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 group-hover:text-gray-500 dark:text-gray-500 dark:group-hover:text-gray-400'
+                }`} />
                 <span className="truncate">{item.name}</span>
               </Link>
             )
           })}
         </nav>
-        <div className="border-t border-theme-border p-4">
+
+        {/* Sidebar Footer */}
+        <div className="border-t border-gray-200 dark:border-gray-700 p-4">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className={`w-8 h-8 bg-gradient-to-r ${gradientColors} rounded-full flex items-center justify-center`}>
+              <span className="text-white font-semibold text-xs">{initials}</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                {displayName || 'User'}
+              </p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                {subscriptionPlan}
+              </p>
+            </div>
+          </div>
+          
           <button
             onClick={handleLogout}
-            className="nav-item group w-full flex items-center px-3 py-2 rounded-lg text-theme-text hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-150"
+            className="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
           >
-            <ArrowRightOnRectangleIcon className="w-5 h-5 mr-3" />
+            <ArrowRightOnRectangleIcon className="w-5 h-5 mr-3 flex-shrink-0" />
             Sign Out
           </button>
         </div>
       </aside>
+
       {/* Main content */}
-      <div className="flex flex-col flex-1 min-h-screen">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Top bar */}
-        <div className="top-bar flex items-center px-4 sm:gap-x-6 sm:px-6 lg:px-8 h-16 shadow bg-white dark:bg-gray-900 sticky top-0 z-30">
+        <div className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 shadow-sm">
           <button
             type="button"
-            className="-m-2.5 p-2.5 text-theme-primary lg:hidden"
+            className="-m-2.5 p-2.5 text-gray-700 dark:text-gray-300 lg:hidden"
             onClick={() => setSidebarOpen(true)}
             aria-label="Open sidebar"
           >
             <Bars3Icon className="w-6 h-6" />
           </button>
+          
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
             <div className="flex flex-1" />
             <div className="flex items-center gap-x-4 lg:gap-x-6">
-              {/* User menu */}
-              {displayName ? (
-                <div className="relative">
+              {/* User menu for larger screens */}
+              {displayName && (
+                <div className="hidden lg:flex items-center space-x-3">
                   <Link to="/app/profile" className="flex items-center space-x-3 group cursor-pointer">
-                    {/* Avatar with gradient background */}
-                    <div className={`w-10 h-10 bg-gradient-to-r ${gradientColors} rounded-full flex items-center justify-center shadow-md`}>
-                      <span className="text-white font-semibold text-sm">{initials}</span>
+                    <div className={`w-8 h-8 bg-gradient-to-r ${gradientColors} rounded-full flex items-center justify-center`}>
+                      <span className="text-white font-semibold text-xs">{initials}</span>
                     </div>
-                    <div className="hidden md:block">
-                      <p className="text-sm font-medium text-theme-text group-hover:underline">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900 dark:text-white group-hover:underline">
                         {displayName}
                       </p>
-                      <p className="text-xs text-theme-primary">
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
                         {subscriptionPlan}
                       </p>
                     </div>
                   </Link>
                 </div>
-              ) : (
-                <div className="relative">
-                  <div className="flex items-center space-x-3">
-                    {/* Loading skeleton for avatar */}
-                    <div className="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
-                    <div className="hidden md:block">
-                      <div className="h-4 bg-gray-200 rounded animate-pulse w-20 mb-1"></div>
-                      <div className="h-3 bg-gray-200 rounded animate-pulse w-16"></div>
-                    </div>
-                  </div>
-                </div>
               )}
             </div>
           </div>
         </div>
+
         {/* Page content */}
-        <main className="py-6 flex-1">
-          <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <Outlet />
+        <main className="flex-1">
+          <div className="py-6">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+              <Outlet />
+            </div>
           </div>
         </main>
       </div>

@@ -92,34 +92,27 @@
     border-color: rgba(255, 255, 255, 0.2);
   }
 
-  /* Theme-aware navigation styles */
-  .nav-item {
-    @apply flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200;
-    color: var(--color-primary-700, #1d4ed8);
+  /* Modern sidebar navigation styles */
+  .sidebar-nav-item {
+    @apply flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200;
   }
   
-  .nav-item:hover {
-    background-color: var(--color-primary-50, #eff6ff);
-    color: var(--color-primary-900, #1e3a8a);
+  .sidebar-nav-item:hover {
+    @apply bg-gray-100 dark:bg-gray-700;
   }
   
-  .nav-item.active {
-    background-color: var(--color-primary-100, #dbeafe);
-    color: var(--color-primary-900, #1e3a8a);
+  .sidebar-nav-item.active {
+    @apply bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-r-2 border-blue-600;
   }
 
-  /* Theme-aware sidebar styles */
+  /* Modern sidebar styles */
   .sidebar {
-    @apply flex flex-col flex-grow border-r transition-all duration-200;
-    background-color: var(--color-surface, #ffffff);
-    border-color: var(--color-border, #e2e8f0);
+    @apply bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-xl;
   }
 
-  /* Theme-aware top bar styles */
+  /* Modern top bar styles */
   .top-bar {
-    @apply sticky top-0 z-40 flex h-16 shrink-0 items-center gap-x-4 border-b shadow-sm transition-all duration-200;
-    background-color: var(--color-surface, #ffffff);
-    border-color: var(--color-border, #e2e8f0);
+    @apply bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm;
   }
 }
 
