@@ -189,11 +189,13 @@ export default function Layout() {
   return (
     <div className="min-h-screen bg-theme-background flex flex-col lg:flex-row">
       {/* Mobile sidebar overlay */}
-      <div className={`fixed inset-0 z-50 bg-black bg-opacity-40 transition-opacity lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`} onClick={() => setSidebarOpen(false)} />
+      <div className={`fixed inset-0 z-40 bg-black bg-opacity-40 transition-opacity duration-300 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`} onClick={() => setSidebarOpen(false)} aria-hidden={!sidebarOpen} />
       {/* Sidebar */}
-      <div className={`sidebar z-50 bg-white dark:bg-gray-900 shadow-lg transition-transform duration-300 flex flex-col w-40
-        ${sidebarOpen ? 'fixed inset-y-0 left-0 translate-x-0' : 'fixed inset-y-0 left-0 -translate-x-full'}
-        lg:static lg:inset-0 lg:translate-x-0 lg:flex`}
+      <aside
+        className={`sidebar z-50 bg-white dark:bg-gray-900 shadow-lg transition-transform duration-300 flex flex-col w-64 max-w-full h-full
+        fixed inset-y-0 left-0 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        lg:static lg:inset-0 lg:translate-x-0 lg:flex lg:w-40 lg:max-w-xs`}
+        aria-label="Sidebar"
       >
         <div className="flex h-16 items-center px-6 justify-between lg:justify-start">
           <div className="flex items-center space-x-2">
@@ -201,22 +203,23 @@ export default function Layout() {
             <span className="font-extrabold text-lg text-theme-primary tracking-tight select-none hidden sm:inline">GritScore</span>
           </div>
           {/* Close button for mobile */}
-          <button className="lg:hidden p-2.5" onClick={() => setSidebarOpen(false)}>
+          <button className="lg:hidden p-2.5 rounded hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-theme-primary" onClick={() => setSidebarOpen(false)} aria-label="Close sidebar">
             <XMarkIcon className="w-6 h-6 text-gray-700 dark:text-gray-200" />
           </button>
         </div>
-        <nav className="flex-1 space-y-1 px-4 py-4">
+        <nav className="flex-1 space-y-1 px-4 py-4 overflow-y-auto">
           {filteredNavigation.map((item) => {
             const isActive = location.pathname === item.href
             return (
               <Link
                 key={item.name}
                 to={item.href}
-                className={`nav-item group ${isActive ? 'active' : ''}`}
+                className={`nav-item group flex items-center px-3 py-2 rounded-lg transition-colors duration-150 ${isActive ? 'bg-theme-primary text-white' : 'text-theme-text hover:bg-gray-100 dark:hover:bg-gray-800'}`}
                 onClick={() => setSidebarOpen(false)} // close sidebar on mobile nav
+                tabIndex={sidebarOpen || window.innerWidth >= 1024 ? 0 : -1}
               >
                 <item.icon className="w-5 h-5 mr-3" />
-                {item.name}
+                <span className="truncate">{item.name}</span>
               </Link>
             )
           })}
@@ -224,14 +227,13 @@ export default function Layout() {
         <div className="border-t border-theme-border p-4">
           <button
             onClick={handleLogout}
-            className="nav-item group w-full"
+            className="nav-item group w-full flex items-center px-3 py-2 rounded-lg text-theme-text hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors duration-150"
           >
             <ArrowRightOnRectangleIcon className="w-5 h-5 mr-3" />
             Sign Out
           </button>
         </div>
-      </div>
-
+      </aside>
       {/* Main content */}
       <div className="flex flex-col flex-1 min-h-screen">
         {/* Top bar */}
@@ -240,6 +242,7 @@ export default function Layout() {
             type="button"
             className="-m-2.5 p-2.5 text-theme-primary lg:hidden"
             onClick={() => setSidebarOpen(true)}
+            aria-label="Open sidebar"
           >
             <Bars3Icon className="w-6 h-6" />
           </button>

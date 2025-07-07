@@ -195,9 +195,9 @@ export default function Dashboard() {
     <div className="space-y-6 px-2 sm:px-4 md:px-6 lg:px-0 max-w-7xl mx-auto w-full">
       {/* Upgrade Banner for Free plan */}
       {!planLoading && plan === 'Free' && (
-        <div className="bg-yellow-100 border-l-4 border-yellow-400 p-4 flex items-center justify-between">
+        <div className="bg-yellow-100 border-l-4 border-yellow-400 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 rounded-lg shadow-sm">
           <span className="text-yellow-800 font-medium">Unlock AI Chat, Credit Analysis, and more by upgrading your plan!</span>
-          <Link to="/app/pricing" className="btn btn-primary ml-4">Upgrade</Link>
+          <Link to="/app/pricing" className="btn btn-primary ml-0 sm:ml-4 w-full sm:w-auto">Upgrade</Link>
         </div>
       )}
       {/* Header */}
@@ -215,12 +215,12 @@ export default function Dashboard() {
         </div>
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-4 sm:mt-0">
           {plan !== 'VIP' && !planLoading && (
-            <Link to="/app/pricing" className="btn btn-primary">Upgrade</Link>
+            <Link to="/app/pricing" className="btn btn-primary w-full sm:w-auto">Upgrade</Link>
           )}
           <select
             value={selectedTimeframe}
             onChange={(e) => setSelectedTimeframe(e.target.value)}
-            className="input-field w-auto"
+            className="input-field w-full sm:w-auto"
           >
             <option value="7d">Last 7 days</option>
             <option value="30d">Last 30 days</option>
@@ -231,7 +231,7 @@ export default function Dashboard() {
       </div>
       {/* What's included in your plan */}
       {!planLoading && plan && (
-        <div className="card bg-blue-50 border-blue-200">
+        <div className="card bg-blue-50 border-blue-200 rounded-lg p-4 mb-2">
           <h3 className="font-semibold mb-2">What's included in your <span className="capitalize">{plan}</span> plan:</h3>
           <ul className="flex flex-wrap gap-4 text-sm">
             <li className={currentAccess.budgeting ? 'text-green-600' : 'text-gray-400'}>Budgeting & Debt Tracker</li>
@@ -248,38 +248,31 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="card"
+          className="card rounded-lg shadow-md p-6 bg-white dark:bg-gray-900 flex flex-col"
         >
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-theme-text">Credit Score</h3>
             <ArrowTrendingUpIcon className="w-5 h-5 text-theme-primary" />
           </div>
           <div className="text-center">
-            <div className={`text-4xl font-bold ${getScoreColor(mockCreditScore.current)}`}>
-              {mockCreditScore.current}
-            </div>
+            <div className={`text-4xl font-bold ${getScoreColor(mockCreditScore.current)}`}>{mockCreditScore.current}</div>
             <div className="flex items-center justify-center mt-2">
               {mockCreditScore.trend === 'up' ? (
                 <ArrowUpIcon className="w-4 h-4 text-green-500 mr-1" />
               ) : (
                 <ArrowDownIcon className="w-4 h-4 text-red-500 mr-1" />
               )}
-              <span className={`text-sm font-medium ${
-                mockCreditScore.trend === 'up' ? 'text-green-600' : 'text-red-600'
-              }`}>
-                {mockCreditScore.change} points
-              </span>
+              <span className={`text-sm font-medium ${mockCreditScore.trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>{mockCreditScore.change} points</span>
             </div>
             <p className="text-xs text-theme-primary mt-1">vs last month</p>
           </div>
         </motion.div>
-
         {/* Credit Factors */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="card"
+          className="card rounded-lg shadow-md p-6 bg-white dark:bg-gray-900 flex flex-col"
         >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Credit Factors</h3>
           <div className="h-48">
@@ -306,10 +299,7 @@ export default function Dashboard() {
             {mockCreditFactors.map((factor, index) => (
               <div key={factor.name} className="flex items-center justify-between text-sm">
                 <div className="flex items-center">
-                  <div
-                    className="w-3 h-3 rounded-full mr-2"
-                    style={{ backgroundColor: factor.color }}
-                  />
+                  <div className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: factor.color }} />
                   <span className="text-gray-700">{factor.name}</span>
                 </div>
                 <span className="font-medium text-gray-900">{factor.value}%</span>
@@ -317,13 +307,12 @@ export default function Dashboard() {
             ))}
           </div>
         </motion.div>
-
         {/* Score History */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="card"
+          className="card rounded-lg shadow-md p-6 bg-white dark:bg-gray-900 flex flex-col"
         >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Score History</h3>
           <div className="h-48">
@@ -345,13 +334,12 @@ export default function Dashboard() {
           </div>
         </motion.div>
       </div>
-
       {/* Quick Actions */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.3 }}
-        className="card"
+        className="card rounded-lg shadow-md p-6 bg-white dark:bg-gray-900"
       >
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -385,13 +373,12 @@ export default function Dashboard() {
           ))}
         </div>
       </motion.div>
-
       {/* Recent Activities */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.4 }}
-        className="card"
+        className="card rounded-lg shadow-md p-6 bg-white dark:bg-gray-900"
       >
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Activities</h3>
         <div className="space-y-4 max-h-96 overflow-y-auto">
@@ -409,7 +396,6 @@ export default function Dashboard() {
           ))}
         </div>
       </motion.div>
-
       {/* Upgrade Modal */}
       <Dialog open={showUpgradeModal} onClose={() => setShowUpgradeModal(false)} className="fixed z-50 inset-0 overflow-y-auto">
         <div className="flex items-center justify-center min-h-screen px-4">
