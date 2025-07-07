@@ -130,10 +130,10 @@ const DebtTracker = () => {
   const currentYear = new Date().getFullYear()
   const yearOptions = Array.from({ length: 11 }, (_, i) => currentYear - 5 + i)
 
-  // Get payment status for a month (synchronous, with debug logging)
+  // Get payment status for a month (synchronous, with enhanced debug logging)
   const getPaymentStatus = (debt, monthIndex, year) => {
-    // Find any transaction that matches this debt and month/year
-    const tx = transactions.find(t => {
+    // Find all transactions for this debt and month/year
+    const candidates = transactions.filter(t => {
       const debtMatch = t.debt_id === debt.id || 
                        (t.description && t.description.toLowerCase().includes(debt.item_name.toLowerCase()));
       let txDate = t.date;
@@ -143,8 +143,22 @@ const DebtTracker = () => {
       const dateMatch = txDate.getMonth() === (monthIndex - 1) && txDate.getFullYear() === year;
       return debtMatch && dateMatch;
     });
+    console.log('[DEBUG] getPaymentStatus candidates:', {
+      debt: debt.item_name,
+      debt_id: debt.id,
+      monthIndex,
+      year,
+      candidates: candidates.map(t => ({
+        id: t.id,
+        debt_id: t.debt_id,
+        description: t.description,
+        date: t.date,
+        status: t.status
+      }))
+    });
+    const tx = candidates[0];
     if (tx) {
-      console.log('[DEBUG] getPaymentStatus:', {
+      console.log('[DEBUG] getPaymentStatus MATCH:', {
         debt: debt.item_name,
         monthIndex,
         year,
