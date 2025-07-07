@@ -468,11 +468,12 @@ export default function Budgeting() {
 
   // Filtering
   const selectedMonth = `${year}-${String(month).padStart(2, '0')}`;
-  const filteredCategories = categories.filter(c => c.type === tab);
+  const filteredCategories = categories.filter(c => c.type === tab); // User-added categories only
+  const allFilteredCategories = allCategories.filter(c => c.type === tab); // All categories (default + user-added)
   const items = transactions.filter(
     i =>
       getMonthYear(i.date) === selectedMonth &&
-      filteredCategories.some(c => c.id === i.category_id) &&
+      allFilteredCategories.some(c => c.id === i.category_id) &&
       (!search || i.description?.toLowerCase().includes(search.toLowerCase()) || String(i.amount).includes(search)) &&
       (!filter.frequency || i.recurrence === filter.frequency) &&
       (!filter.category || i.category_id === Number(filter.category))
@@ -483,8 +484,8 @@ export default function Budgeting() {
   const totalExpense = transactions.filter(i => getMonthYear(i.date) === selectedMonth && i.amount < 0).reduce((a, b) => a + Math.abs(b.amount), 0);
   const netBalance = totalIncome - totalExpense;
 
-  // Chart data
-  const chartData = filteredCategories.map(cat => ({
+  // Chart data - use all categories for chart
+  const chartData = allFilteredCategories.map(cat => ({
     name: cat.name,
     value: items.filter(i => i.category_id === cat.id).reduce((a, b) => a + Math.abs(b.amount), 0)
   }));
@@ -596,7 +597,7 @@ export default function Budgeting() {
                     <tr className="border-b border-gray-100"><td colSpan={7} className="text-center text-gray-400 py-2">No items</td></tr>
                   )}
                   {items.map(item => {
-                    const cat = filteredCategories.find(c => c.id === item.category_id);
+                    const cat = allFilteredCategories.find(c => c.id === item.category_id);
                     return (
                       <tr key={item.id} className="border-b border-gray-100">
                         <td className="px-2 py-1 border-r border-gray-200 font-semibold">
@@ -659,7 +660,7 @@ export default function Budgeting() {
           </div>
         ) : (
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Categories</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">My Categories</h3>
             <div className="overflow-x-auto mb-8">
               <table className="min-w-full text-sm border border-gray-200">
                 <thead className="border-b border-gray-200">
@@ -671,10 +672,10 @@ export default function Budgeting() {
                   </tr>
                 </thead>
                 <tbody>
-                  {categories.length === 0 && (
-                    <tr className="border-b border-gray-100"><td colSpan={4} className="text-center text-gray-400 py-2">No categories</td></tr>
+                  {categories.filter(cat => !cat.is_default).length === 0 && (
+                    <tr className="border-b border-gray-100"><td colSpan={4} className="text-center text-gray-400 py-2">No custom categories. Add your first category above!</td></tr>
                   )}
-                  {categories.map(cat => (
+                  {categories.filter(cat => !cat.is_default).map(cat => (
                     <tr key={cat.id} className="border-b border-gray-100">
                       <td className="px-2 py-1 border-r border-gray-200 font-semibold">{cat.name}</td>
                       <td className="px-2 py-1 border-r border-gray-200">{cat.type.charAt(0).toUpperCase() + cat.type.slice(1)}</td>
@@ -717,7 +718,7 @@ export default function Budgeting() {
                     <tr className="border-b border-gray-100"><td colSpan={9} className="text-center text-gray-400 py-2">No items</td></tr>
                   )}
                   {transactions.map(item => {
-                    const cat = categories.find(c => c.id === item.category_id);
+                    const cat = allFilteredCategories.find(c => c.id === item.category_id);
                     const startDate = item.date;
                     const endDate = item.date;
                     const duration = '1 day';
@@ -813,10 +814,10 @@ export default function Budgeting() {
             <option value="paid">Paid</option>
             <option value="missed">Missed</option>
           </select>
-          <select className="input" value={filter.category} onChange={e => setFilter(f => ({ ...f, category: e.target.value }))}>
-            <option value="">All Categories</option>
-            {filteredCategories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
-          </select>
+                            <select className="input" value={filter.category} onChange={e => setFilter(f => ({ ...f, category: e.target.value }))}>
+                    <option value="">All Categories</option>
+                    {allFilteredCategories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
+                  </select>
           <button className="btn-secondary flex items-center gap-1" title="Export CSV">
             <ArrowDownTrayIcon className="w-4 h-4" /> Export
           </button>
@@ -887,7 +888,7 @@ export default function Budgeting() {
                       required
                     >
                       <option value="">Select a category</option>
-                      {/* Show all categories for current tab */}
+                      {/* Show all categories for current tab (both default and user-added) */}
                       {allCategories.filter(cat => cat.type === tab).map(cat => (
                         <option key={cat.id} value={cat.id}>
                           {cat.name}
