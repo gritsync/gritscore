@@ -129,7 +129,9 @@ class SubscriptionManager:
             # Check if subscription is expired
             if user_data.get('subscription_end_date'):
                 end_date = datetime.fromisoformat(user_data['subscription_end_date'].replace('Z', '+00:00'))
-                is_expired = current_date > end_date
+                # Make current_date timezone-aware for comparison
+                current_date_aware = current_date.replace(tzinfo=end_date.tzinfo)
+                is_expired = current_date_aware > end_date
             else:
                 is_expired = False
             
@@ -140,7 +142,7 @@ class SubscriptionManager:
                 'status': 'active',  # Default to active since we don't have subscription_status column
                 'is_expired': is_expired,
                 'data_archived': user_data.get('data_archived', False),
-                'days_remaining': (end_date - current_date).days if not is_expired else 0
+                'days_remaining': (end_date - current_date_aware).days if not is_expired else 0
             }
             
         except Exception as e:
