@@ -1,7 +1,8 @@
 import axios from 'axios'
+import config from '../config/environment.js'
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: config.API_URL,
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -164,8 +165,7 @@ export const creditDetailsAPI = {
 };
 
 export async function deleteAnalyzedReport(id) {
-  const apiUrl = import.meta.env.VITE_API_URL || '/api';
-  const res = await fetch(`${apiUrl}/crdt/analysis/${id}`, {
+  const res = await fetch(`${config.API_URL}/crdt/analysis/${id}`, {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
   });
@@ -174,8 +174,7 @@ export async function deleteAnalyzedReport(id) {
 }
 
 export async function clearAnalyzedReports() {
-  const apiUrl = import.meta.env.VITE_API_URL || '/api';
-  const res = await fetch(`${apiUrl}/crdt/analyses`, {
+  const res = await fetch(`${config.API_URL}/crdt/analyses`, {
     method: 'DELETE',
     headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
   });

@@ -14,7 +14,7 @@ import {
   SparklesIcon,
   ShieldCheckIcon,
   LightBulbIcon,
-  TrendingUpIcon,
+  ArrowTrendingUpIcon,
   ChartBarIcon
 } from '@heroicons/react/24/outline'
 import { disputeAPI, creditAPI, profileAPI } from '../services/api'
@@ -144,7 +144,7 @@ const Disputes = () => {
         type: 'common_reason',
         title: `Consider disputing: ${reason}`,
         description: `This reason has been used ${count} times with good success rates.`,
-        icon: TrendingUpIcon,
+        icon: ArrowTrendingUpIcon,
         color: 'text-green-600',
         action: () => setNewDispute(prev => ({ ...prev, reason }))
       })
@@ -246,7 +246,7 @@ const Disputes = () => {
       insights.push({
         type: 'high_success',
         message: `Excellent! Your dispute success rate is ${disputeAnalytics.successRate.toFixed(1)}%. Keep up the good work!`,
-        icon: TrendingUpIcon,
+        icon: ArrowTrendingUpIcon,
         color: 'text-green-600'
       })
     } else if (disputeAnalytics.successRate < 50) {

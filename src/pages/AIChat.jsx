@@ -9,7 +9,7 @@ import {
   UserIcon,
   LightBulbIcon,
   ChartBarIcon,
-  TrendingUpIcon,
+  ArrowTrendingUpIcon,
   ExclamationTriangleIcon
 } from '@heroicons/react/24/outline'
 import { chatAPI } from '../services/api'
@@ -124,7 +124,7 @@ export default function AIChat() {
       insights.push({
         type: 'credit_focus',
         message: 'You seem focused on credit scores. Consider tracking your score trends over time.',
-        icon: TrendingUpIcon,
+        icon: ArrowTrendingUpIcon,
         color: 'text-blue-600'
       })
     }
