@@ -130,28 +130,20 @@ const DebtTracker = () => {
   const currentYear = new Date().getFullYear()
   const yearOptions = Array.from({ length: 11 }, (_, i) => currentYear - 5 + i)
 
-  // Get payment status with loading state
-  const getPaymentStatus = async (debt, monthIndex, year) => {
-    const loadingKey = `${debt.id}-${monthIndex}-${year}`
-    
-    // If already loading, return current state
-    if (paymentStatusLoading[loadingKey]) {
-      return null // Return null to show loading state
-    }
-    
+  // Get payment status for a month (synchronous)
+  const getPaymentStatus = (debt, monthIndex, year) => {
     // Find any transaction that matches this debt and month/year
     const tx = transactions.find(t => {
       const debtMatch = t.debt_id === debt.id || 
-                       (t.description && t.description.toLowerCase().includes(debt.item_name.toLowerCase()))
-      let txDate = t.date
-      if (typeof txDate === 'string') txDate = new Date(txDate)
-      if (!(txDate instanceof Date) || isNaN(txDate)) return false
-      const dateMatch = txDate.getMonth() === (monthIndex - 1) && txDate.getFullYear() === year
-      return debtMatch && dateMatch
-    })
-    
-    return tx && (tx.status === 'paid' || tx.status === undefined)
-  }
+                       (t.description && t.description.toLowerCase().includes(debt.item_name.toLowerCase()));
+      let txDate = t.date;
+      if (typeof txDate === 'string') txDate = new Date(txDate);
+      if (!(txDate instanceof Date) || isNaN(txDate)) return false;
+      const dateMatch = txDate.getMonth() === (monthIndex - 1) && txDate.getFullYear() === year;
+      return debtMatch && dateMatch;
+    });
+    return !!(tx && (tx.status === 'paid' || tx.status === undefined));
+  };
 
   // Check if payment status is loading for a specific month
   const isPaymentStatusLoading = (debt, monthIndex, year) => {
