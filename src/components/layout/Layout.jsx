@@ -258,10 +258,9 @@ export default function Layout() {
               </p>
             </div>
           </div>
-          
           <button
             onClick={handleLogout}
-            className="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
+            className="w-full flex items-center px-3 py-2 mt-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
           >
             <ArrowRightOnRectangleIcon className="w-5 h-5 mr-3 flex-shrink-0" />
             Sign Out

@@ -5,6 +5,7 @@ import { budgetAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../services/supabase';
 import { toast } from 'react-hot-toast';
+import LoadingModal from '../components/LoadingModal';
 
 const COLORS = ['#0ea5e9', '#22c55e', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16', '#f97316'];
 const FREQUENCIES = ['one-time', 'weekly', 'monthly'];
@@ -70,6 +71,8 @@ export default function Budgeting() {
 
   // All categories for dropdown (including default and user-added)
   const [allCategories, setAllCategories] = useState([]);
+
+  const [loadingModal, setLoadingModal] = useState(false);
 
   // Function to check if a transaction is a debt payment
   const isDebtPayment = (transaction) => {
@@ -291,27 +294,28 @@ export default function Budgeting() {
 
   // Handle form submission for adding item
   const handleAddItem = async () => {
-    if (!addItemCategory) {
-      alert('Please select a category');
-      return;
-    }
-    
-    if (!newItem.description.trim()) {
-      alert('Please enter an item name');
-      return;
-    }
-    
-    if (!newItem.amount) {
-      alert('Please enter an amount');
-      return;
-    }
-    
-    if (!newItem.date) {
-      alert('Please select a date');
-      return;
-    }
-    
+    setLoadingModal(true);
     try {
+      if (!addItemCategory) {
+        alert('Please select a category');
+        return;
+      }
+      
+      if (!newItem.description.trim()) {
+        alert('Please enter an item name');
+        return;
+      }
+      
+      if (!newItem.amount) {
+        alert('Please enter an amount');
+        return;
+      }
+      
+      if (!newItem.date) {
+        alert('Please select a date');
+        return;
+      }
+      
       // Determine amount sign based on tab
       const amount = tab === 'income' ? Math.abs(newItem.amount) : -Math.abs(newItem.amount);
       
@@ -372,9 +376,10 @@ export default function Budgeting() {
       // Refresh transactions list
       const txRes = await budgetAPI.getTransactions();
       setTransactions(txRes.data);
+      setLoadingModal(false);
       toast.success('Item added successfully!');
     } catch (err) {
-      console.error('Failed to add item:', err);
+      setLoadingModal(false);
       toast.error('Failed to add item. Please try again.');
     }
   };
@@ -505,6 +510,7 @@ export default function Budgeting() {
 
   return (
     <div className="space-y-6 px-2 sm:px-4 md:px-6 lg:px-0 max-w-7xl mx-auto w-full">
+      <LoadingModal show={loadingModal} />
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-0">
         <div>
