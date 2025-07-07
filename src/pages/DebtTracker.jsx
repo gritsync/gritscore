@@ -29,6 +29,18 @@ const DebtTracker = () => {
   const [editInModal, setEditInModal] = useState(false)
   const [editDebtData, setEditDebtData] = useState(null)
   const [transactionsLoaded, setTransactionsLoaded] = useState(false)
+  const [newDebt, setNewDebt] = useState({
+    item_name: '',
+    provider: '',
+    due_date: '',
+    start_date: '',
+    end_date: '',
+    duration: '',
+    original_amount: '',
+    current_balance: '',
+    monthly_payment: '',
+    status: 'pending'
+  })
 
   // Fetch debts and transactions on mount
   useEffect(() => {

@@ -154,7 +154,7 @@ export default function AIChat() {
   const sendMessageMutation = useMutation(
     (messageText) => chatAPI.sendMessage(messageText),
     {
-      onSuccess: (response) => {
+      onSuccess: (response, messageText) => {
         queryClient.invalidateQueries(['chat-history'])
         setIsTyping(false)
         console.log('Message sent successfully:', response)
