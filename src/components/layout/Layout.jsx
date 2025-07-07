@@ -187,51 +187,53 @@ export default function Layout() {
   const filteredNavigation = navigation.filter(item => item.always || currentAccess[item.access])
 
   return (
-    <div className="min-h-screen bg-theme-background">
+    <div className="min-h-screen bg-theme-background flex flex-col lg:flex-row">
       {/* Mobile sidebar overlay */}
       <div className={`fixed inset-0 z-50 bg-black bg-opacity-40 transition-opacity lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`} onClick={() => setSidebarOpen(false)} />
       {/* Sidebar */}
-      <div className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col sidebar bg-white dark:bg-gray-900 shadow-lg transform transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:static lg:inset-0 lg:flex`}> 
-        <div className="sidebar">
-          <div className="flex h-16 items-center px-6 justify-between lg:justify-start">
-            <div className="flex items-center space-x-2">
-              <img src="/gritscore.png" alt="GritScore.ai" className="h-12 w-auto" />
-            </div>
-            {/* Close button for mobile */}
-            <button className="lg:hidden p-2.5" onClick={() => setSidebarOpen(false)}>
-              <XMarkIcon className="w-6 h-6 text-gray-700 dark:text-gray-200" />
-            </button>
+      <div className={`sidebar z-50 bg-white dark:bg-gray-900 shadow-lg transition-transform duration-300 flex flex-col w-64
+        ${sidebarOpen ? 'fixed inset-y-0 left-0 translate-x-0' : 'fixed inset-y-0 left-0 -translate-x-full'}
+        lg:static lg:inset-0 lg:translate-x-0 lg:flex`}
+      >
+        <div className="flex h-16 items-center px-6 justify-between lg:justify-start">
+          <div className="flex items-center space-x-2">
+            <img src="/gritscore.png" alt="GritScore.ai" className="h-12 w-auto" />
+            <span className="font-extrabold text-xl text-theme-primary tracking-tight select-none hidden sm:inline">GritScore</span>
           </div>
-          <nav className="flex-1 space-y-1 px-4 py-4">
-            {filteredNavigation.map((item) => {
-              const isActive = location.pathname === item.href
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={`nav-item group ${isActive ? 'active' : ''}`}
-                  onClick={() => setSidebarOpen(false)} // close sidebar on mobile nav
-                >
-                  <item.icon className="w-5 h-5 mr-3" />
-                  {item.name}
-                </Link>
-              )
-            })}
-          </nav>
-          <div className="border-t border-theme-border p-4">
-            <button
-              onClick={handleLogout}
-              className="nav-item group w-full"
-            >
-              <ArrowRightOnRectangleIcon className="w-5 h-5 mr-3" />
-              Sign Out
-            </button>
-          </div>
+          {/* Close button for mobile */}
+          <button className="lg:hidden p-2.5" onClick={() => setSidebarOpen(false)}>
+            <XMarkIcon className="w-6 h-6 text-gray-700 dark:text-gray-200" />
+          </button>
+        </div>
+        <nav className="flex-1 space-y-1 px-4 py-4">
+          {filteredNavigation.map((item) => {
+            const isActive = location.pathname === item.href
+            return (
+              <Link
+                key={item.name}
+                to={item.href}
+                className={`nav-item group ${isActive ? 'active' : ''}`}
+                onClick={() => setSidebarOpen(false)} // close sidebar on mobile nav
+              >
+                <item.icon className="w-5 h-5 mr-3" />
+                {item.name}
+              </Link>
+            )
+          })}
+        </nav>
+        <div className="border-t border-theme-border p-4">
+          <button
+            onClick={handleLogout}
+            className="nav-item group w-full"
+          >
+            <ArrowRightOnRectangleIcon className="w-5 h-5 mr-3" />
+            Sign Out
+          </button>
         </div>
       </div>
 
       {/* Main content */}
-      <div className="lg:pl-64 flex flex-col min-h-screen">
+      <div className="flex flex-col flex-1 min-h-screen">
         {/* Top bar */}
         <div className="top-bar flex items-center px-4 sm:gap-x-6 sm:px-6 lg:px-8 h-16 shadow bg-white dark:bg-gray-900 sticky top-0 z-30">
           <button
