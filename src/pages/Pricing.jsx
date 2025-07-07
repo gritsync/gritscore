@@ -6,15 +6,12 @@ import {loadStripe} from '@stripe/stripe-js'
 import { subscriptionAPI } from '../services/api'
 
 // Debug: Log the Stripe key being used
-  const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || 'pk_test_51Qt9RuGl6Bh5tV23vSlevMMOTaYxUQCRE56RcKqt4jupCZnGyfQ4DwW8gvj0oZgZUTsGM0Emu6Bmb6qqlRv9kfUT00EeiNHroK'
-  console.log('Pricing - Stripe Key being used:', stripeKey.substring(0, 20) + '...')
-  console.log('Pricing - Is test key?', stripeKey.startsWith('pk_test_'))
-  console.log('Pricing - Environment variable value:', import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ? 'SET' : 'NOT SET')
-  
-  // Force test mode if not already using test key
-  const finalStripeKey = stripeKey.startsWith('pk_test_') ? stripeKey : 'pk_test_51Qt9RuGl6Bh5tV23vSlevMMOTaYxUQCRE56RcKqt4jupCZnGyfQ4DwW8gvj0oZgZUTsGM0Emu6Bmb6qqlRv9kfUT00EeiNHroK'
-console.log('Pricing - Final Stripe Key:', finalStripeKey.substring(0, 20) + '...')
-const stripePromise = loadStripe(finalStripeKey)
+const stripeKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY;
+console.log('Pricing - Stripe Key being used:', stripeKey.substring(0, 20) + '...')
+console.log('Pricing - Is test key?', stripeKey.startsWith('pk_test_'))
+console.log('Pricing - Environment variable value:', import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY ? 'SET' : 'NOT SET')
+
+const stripePromise = loadStripe(stripeKey);
 
 const Pricing = () => {
   const { user } = useAuth()
