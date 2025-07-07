@@ -470,6 +470,7 @@ export default function Budgeting() {
   const selectedMonth = `${year}-${String(month).padStart(2, '0')}`;
   const filteredCategories = categories.filter(c => c.type === tab); // User-added categories only
   const allFilteredCategories = allCategories.filter(c => c.type === tab); // All categories (default + user-added)
+  // Only show items for the current month in the table
   const items = transactions.filter(
     i =>
       getMonthYear(i.date) === selectedMonth &&
