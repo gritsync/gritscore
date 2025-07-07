@@ -139,14 +139,25 @@ const DebtTracker = () => {
       // Match by debt_id if available, otherwise by description containing debt name
       const debtMatch = t.debt_id === debt.id || 
                        (t.description && t.description.toLowerCase().includes(debt.item_name.toLowerCase()));
-      
+      // Defensive: parse date as string or Date
+      let txDate = t.date;
+      if (typeof txDate === 'string') txDate = new Date(txDate);
+      // Defensive: handle invalid dates
+      if (!(txDate instanceof Date) || isNaN(txDate)) return false;
       // Match by date (month and year)
-      const txDate = new Date(t.date);
       const dateMatch = txDate.getMonth() === (monthIndex - 1) && txDate.getFullYear() === year;
-      
       return debtMatch && dateMatch;
     });
-    
+    if (tx) {
+      // Debug log for diagnosis
+      console.log('[DEBUG] getPaymentStatus:', {
+        debt: debt.item_name,
+        monthIndex,
+        year,
+        tx,
+        status: tx.status
+      });
+    }
     // If transaction exists and is marked as paid, return true
     return tx && (tx.status === 'paid' || tx.status === undefined);
   }
