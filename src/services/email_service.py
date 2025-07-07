@@ -72,66 +72,85 @@ class EmailService:
     def send_welcome_email(self, user_email, user_name):
         """Send welcome email to new users"""
         subject = "Welcome to GritScore.ai - Your Credit Journey Starts Here!"
-        
         html_content = self._get_welcome_template(user_name)
-        
-        return self.send_email(user_email, subject, html_content)
+        from src.services.tasks import send_email_task
+        return send_email_task.delay(user_email, subject, html_content)
 
     def send_crdt_score_update(self, user_email, user_name, old_score, new_score, change):
         """Send credit score update notification"""
         subject = f"Your Credit Score Update: {new_score} ({change:+d} points)"
-        
         html_content = self._get_crdt_score_template(user_name, old_score, new_score, change)
-        
-        return self.send_email(user_email, subject, html_content)
+        from src.services.tasks import send_email_task
+        return send_email_task.delay(user_email, subject, html_content)
 
     def send_dispute_update(self, user_email, user_name, dispute_id, status, bureau):
         """Send dispute status update"""
         subject = f"Dispute Update: {status.title()} - {bureau}"
-        
         html_content = self._get_dispute_update_template(user_name, dispute_id, status, bureau)
-        
-        return self.send_email(user_email, subject, html_content)
+        from src.services.tasks import send_email_task
+        return send_email_task.delay(user_email, subject, html_content)
 
     def send_payment_confirmation(self, user_email, user_name, amount, plan):
         """Send payment confirmation"""
         subject = f"Payment Confirmed - {plan} Plan"
-        
         html_content = self._get_payment_template(user_name, amount, plan)
-        
-        return self.send_email(user_email, subject, html_content)
+        from src.services.tasks import send_email_task
+        return send_email_task.delay(user_email, subject, html_content)
 
     def send_monthly_report(self, user_email, user_name, report_data):
         """Send monthly credit report"""
         subject = "Your Monthly Credit Report - GritScore.ai"
-        
         html_content = self._get_monthly_report_template(user_name, report_data)
-        
-        return self.send_email(user_email, subject, html_content)
+        from src.services.tasks import send_email_task
+        return send_email_task.delay(user_email, subject, html_content)
 
     def send_security_alert(self, user_email, user_name, alert_type, details):
         """Send security alert"""
         subject = f"Security Alert: {alert_type}"
-        
         html_content = self._get_security_alert_template(user_name, alert_type, details)
-        
-        return self.send_email(user_email, subject, html_content)
+        from src.services.tasks import send_email_task
+        return send_email_task.delay(user_email, subject, html_content)
 
     def send_verification_email(self, user_email, user_name, verification_link):
         """Send email verification email"""
         subject = "Verify Your GritScore.ai Account"
-        
         html_content = self._get_verification_template(user_name, verification_link)
-        
-        return self.send_email(user_email, subject, html_content)
+        from src.services.tasks import send_email_task
+        return send_email_task.delay(user_email, subject, html_content)
 
     def send_password_reset(self, user_email, user_name, reset_link):
         """Send password reset email"""
         subject = "Reset Your GritScore.ai Password"
-        
         html_content = self._get_password_reset_template(user_name, reset_link)
-        
-        return self.send_email(user_email, subject, html_content)
+        from src.services.tasks import send_email_task
+        return send_email_task.delay(user_email, subject, html_content)
+
+    def send_weekly_report(self, user_email, user_name, report_data):
+        """Send weekly report email to users"""
+        subject = "Your Weekly GritScore.ai Report"
+        html_content = f"""
+        <h1>📊 Your Weekly Report</h1>
+        <p>Hello {user_name},</p>
+        <p>Here is your financial summary for the week:</p>
+        <pre style='background:#f4f4f4;padding:1em;border-radius:6px'>{report_data}</pre>
+        <p>Keep up the great work!</p>
+        <p>— The GritScore.ai Team</p>
+        """
+        from src.services.tasks import send_email_task
+        return send_email_task.delay(user_email, subject, html_content)
+
+    def send_due_date_reminder(self, user_email, user_name, due_item, due_date):
+        """Send due date reminder email to users"""
+        subject = f"Reminder: {due_item} is due on {due_date}"
+        html_content = f"""
+        <h1>⏰ Due Date Reminder</h1>
+        <p>Hello {user_name},</p>
+        <p>This is a friendly reminder that <b>{due_item}</b> is due on <b>{due_date}</b>.</p>
+        <p>Please make sure to take action before the deadline.</p>
+        <p>— The GritScore.ai Team</p>
+        """
+        from src.services.tasks import send_email_task
+        return send_email_task.delay(user_email, subject, html_content)
 
     # Email Templates
     def _get_welcome_template(self, user_name):
