@@ -65,6 +65,7 @@ export default function Layout() {
   const [supabaseUser, setSupabaseUser] = useState(null)
   const [supabaseProfile, setSupabaseProfile] = useState(null)
   const [subscriptionPlan, setSubscriptionPlan] = useState('Free Plan')
+  const [userLoading, setUserLoading] = useState(true)
   const themeMenuRef = useRef(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -91,6 +92,7 @@ export default function Layout() {
   useEffect(() => {
     // Fetch Supabase user session and profile
     const fetchUser = async () => {
+      setUserLoading(true)
       let userId = user?.sub || user?.id
       console.log('=== LAYOUT DEBUG ===')
       console.log('AuthContext user:', user)
@@ -99,6 +101,7 @@ export default function Layout() {
       
       if (!userId) {
         console.log('No user ID found, skipping Supabase fetch')
+        setUserLoading(false)
         return
       }
       
@@ -125,6 +128,8 @@ export default function Layout() {
       } catch (err) {
         console.error('Error fetching user profile:', err)
         setSubscriptionPlan('Free Plan')
+      } finally {
+        setUserLoading(false)
       }
     }
     fetchUser()
@@ -254,19 +259,21 @@ export default function Layout() {
 
         {/* Sidebar Footer (fixed at bottom) */}
         <div className="border-t p-4" style={{ borderColor: theme.border, backgroundColor: theme.surface }}>
-          <div className="flex items-center space-x-3 mb-4">
-            <div className={`w-8 h-8 bg-gradient-to-r ${gradientColors} rounded-full flex items-center justify-center`}>
-              <span className="text-white font-semibold text-xs">{initials}</span>
+          {!userLoading && displayName && (
+            <div className="flex items-center space-x-3 mb-4">
+              <div className={`w-8 h-8 bg-gradient-to-r ${gradientColors} rounded-full flex items-center justify-center`}>
+                <span className="text-white font-semibold text-xs">{initials}</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate" style={{ color: theme.text }}>
+                  {displayName}
+                </p>
+                <p className="text-xs truncate" style={{ color: theme.primary[500] }}>
+                  {subscriptionPlan}
+                </p>
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate" style={{ color: theme.text }}>
-                {displayName || 'User'}
-              </p>
-              <p className="text-xs truncate" style={{ color: theme.primary[500] }}>
-                {subscriptionPlan}
-              </p>
-            </div>
-          </div>
+          )}
           <button
             onClick={handleLogout}
             className="w-full flex items-center px-3 py-2 mt-2 text-sm font-medium rounded-lg transition-colors duration-200 hover:bg-opacity-10"
