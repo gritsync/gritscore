@@ -856,6 +856,7 @@ const DebtTracker = () => {
               {/* Right: Months Paid */}
               <div className="flex-1 flex flex-col items-center justify-center">
                 <span className="text-base font-semibold text-gray-700 mb-2">Monthly Payment Status</span>
+                <p className="text-xs text-gray-500 mb-3 text-center">Click on months to toggle payment status</p>
                 <div className="mb-3 flex items-center gap-2">
                   <span className="text-sm font-medium text-gray-600">Year:</span>
                   <select
@@ -870,24 +871,32 @@ const DebtTracker = () => {
                 </div>
                 <div className="flex flex-wrap gap-3 justify-center">
                   {['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'].map((month, idx) => {
-                    let paid = false;
-                    let paymentDate = null;
-                    if (selectedDebt.payment_status && selectedDebt.payment_status[modalYear]) {
-                      const monthKey = month.toLowerCase();
-                      paid = !!selectedDebt.payment_status[modalYear][monthKey];
-                      if (paid && selectedDebt.payment_status[modalYear][monthKey + '_date']) {
-                        paymentDate = selectedDebt.payment_status[modalYear][monthKey + '_date'];
-                      }
-                    }
+                    const monthIndex = idx + 1; // Convert to 1-12 format
+                    const isPaid = getPaymentStatus(selectedDebt, monthIndex, parseInt(modalYear));
+                    
+                    // Find the transaction for this month to get payment date
+                    const transaction = transactions.find(t => {
+                      const debtMatch = t.debt_id === selectedDebt.id || 
+                                       (t.description && t.description.toLowerCase().includes(selectedDebt.item_name.toLowerCase()));
+                      const txDate = new Date(t.date);
+                      const dateMatch = txDate.getMonth() === (monthIndex - 1) && txDate.getFullYear() === parseInt(modalYear);
+                      return debtMatch && dateMatch;
+                    });
+                    
+                    const paymentDate = transaction ? new Date(transaction.date).toLocaleDateString() : null;
+                    
                     return (
                       <div
                         key={month}
-                        className={`flex flex-col items-center w-16 h-16 rounded-xl shadow-md bg-gradient-to-br ${paid ? 'from-green-400 to-green-600' : 'from-gray-200 to-gray-300'} justify-center transition-all group relative`}
+                        className={`flex flex-col items-center w-16 h-16 rounded-xl shadow-md bg-gradient-to-br ${isPaid ? 'from-green-400 to-green-600' : 'from-gray-200 to-gray-300'} justify-center transition-all group relative cursor-pointer hover:scale-105`}
+                        onClick={() => updatePaymentStatusForMonthYear(selectedDebt.id, monthIndex, parseInt(modalYear), isPaid)}
                       >
                         <span className="font-bold text-sm text-white drop-shadow-sm">{month}</span>
-                        <span className={`text-2xl font-bold ${paid ? 'text-green-200' : 'text-red-500'}`}>{paid ? '✔' : '✗'}</span>
+                        <span className={`text-2xl font-bold ${isPaid ? 'text-green-200' : 'text-red-500'} transition-all duration-200`}>
+                          {isPaid ? '✔' : '✗'}
+                        </span>
                         <div className="absolute bottom-14 left-1/2 -translate-x-1/2 z-10 hidden group-hover:block bg-black text-white text-xs rounded px-2 py-1 whitespace-nowrap pointer-events-none shadow-lg">
-                          {paid ? (paymentDate ? `Paid on ${paymentDate}` : 'Paid') : 'Not paid'}
+                          {isPaid ? (paymentDate ? `Paid on ${paymentDate}` : 'Paid') : 'Click to mark as paid'}
                         </div>
                       </div>
                     );
