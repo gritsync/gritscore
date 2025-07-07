@@ -53,7 +53,6 @@ class SubscriptionManager:
                     
                     # Update user status
                     supabase.table('users').update({
-                        'subscription_status': 'expired',
                         'data_archived': True,
                         'data_archived_at': current_date.isoformat()
                     }).eq('id', user_id).execute()
@@ -102,7 +101,6 @@ class SubscriptionManager:
             
             # Update user status
             supabase.table('users').update({
-                'subscription_status': 'active',
                 'data_archived': False,
                 'data_archived_at': None
             }).eq('id', user_id).execute()
@@ -119,7 +117,7 @@ class SubscriptionManager:
         """Get detailed subscription status for a user"""
         try:
             user = supabase.table('users').select(
-                'subscription_plan, subscription_start_date, subscription_end_date, subscription_status, data_archived'
+                'subscription_plan, subscription_start_date, subscription_end_date, data_archived'
             ).eq('id', user_id).single().execute()
             
             if not user.data:
@@ -139,7 +137,7 @@ class SubscriptionManager:
                 'plan': user_data.get('subscription_plan', 'free'),
                 'start_date': user_data.get('subscription_start_date'),
                 'end_date': user_data.get('subscription_end_date'),
-                'status': user_data.get('subscription_status', 'active'),
+                'status': 'active',  # Default to active since we don't have subscription_status column
                 'is_expired': is_expired,
                 'data_archived': user_data.get('data_archived', False),
                 'days_remaining': (end_date - current_date).days if not is_expired else 0
