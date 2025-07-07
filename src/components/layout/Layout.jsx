@@ -191,14 +191,14 @@ export default function Layout() {
       {/* Mobile sidebar overlay */}
       <div className={`fixed inset-0 z-50 bg-black bg-opacity-40 transition-opacity lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`} onClick={() => setSidebarOpen(false)} />
       {/* Sidebar */}
-      <div className={`sidebar z-50 bg-white dark:bg-gray-900 shadow-lg transition-transform duration-300 flex flex-col w-64
+      <div className={`sidebar z-50 bg-white dark:bg-gray-900 shadow-lg transition-transform duration-300 flex flex-col w-40
         ${sidebarOpen ? 'fixed inset-y-0 left-0 translate-x-0' : 'fixed inset-y-0 left-0 -translate-x-full'}
         lg:static lg:inset-0 lg:translate-x-0 lg:flex`}
       >
         <div className="flex h-16 items-center px-6 justify-between lg:justify-start">
           <div className="flex items-center space-x-2">
-            <img src="/gritscore.png" alt="GritScore.ai" className="h-12 w-auto" />
-            <span className="font-extrabold text-xl text-theme-primary tracking-tight select-none hidden sm:inline">GritScore</span>
+            <img src="/gritscore.png" alt="GritScore.ai" className="h-10 w-auto" />
+            <span className="font-extrabold text-lg text-theme-primary tracking-tight select-none hidden sm:inline">GritScore</span>
           </div>
           {/* Close button for mobile */}
           <button className="lg:hidden p-2.5" onClick={() => setSidebarOpen(false)}>
