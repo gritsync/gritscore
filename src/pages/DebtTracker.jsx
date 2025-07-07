@@ -130,7 +130,7 @@ const DebtTracker = () => {
   const currentYear = new Date().getFullYear()
   const yearOptions = Array.from({ length: 11 }, (_, i) => currentYear - 5 + i)
 
-  // Get payment status for a month (synchronous)
+  // Get payment status for a month (synchronous, with debug logging)
   const getPaymentStatus = (debt, monthIndex, year) => {
     // Find any transaction that matches this debt and month/year
     const tx = transactions.find(t => {
@@ -139,10 +139,21 @@ const DebtTracker = () => {
       let txDate = t.date;
       if (typeof txDate === 'string') txDate = new Date(txDate);
       if (!(txDate instanceof Date) || isNaN(txDate)) return false;
+      // UI monthIndex is 1-based, JS Date is 0-based
       const dateMatch = txDate.getMonth() === (monthIndex - 1) && txDate.getFullYear() === year;
       return debtMatch && dateMatch;
     });
-    return !!(tx && (tx.status === 'paid' || tx.status === undefined));
+    if (tx) {
+      console.log('[DEBUG] getPaymentStatus:', {
+        debt: debt.item_name,
+        monthIndex,
+        year,
+        tx,
+        status: tx.status
+      });
+    }
+    // Normalize status check
+    return !!(tx && (typeof tx.status === 'string' ? tx.status.trim().toLowerCase() === 'paid' : tx.status === undefined));
   };
 
   // Check if payment status is loading for a specific month
