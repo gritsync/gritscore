@@ -68,6 +68,9 @@ export default function Layout() {
   const themeMenuRef = useRef(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
+  // Get current theme colors
+  const theme = themes[currentTheme] || themes.blue
+
   // Handle clicking outside theme menu
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -187,24 +190,26 @@ export default function Layout() {
   const filteredNavigation = navigation.filter(item => item.always || currentAccess[item.access])
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen" style={{ backgroundColor: theme.background }}>
       {/* Mobile sidebar overlay */}
       <div className={`fixed inset-0 z-40 bg-black bg-opacity-50 transition-opacity duration-300 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`} onClick={() => setSidebarOpen(false)} aria-hidden={!sidebarOpen} />
       
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-xl transition-transform duration-300 ease-in-out transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
+        className={`fixed inset-y-0 left-0 z-50 w-64 border-r shadow-xl transition-transform duration-300 ease-in-out transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}
+        style={{ backgroundColor: theme.surface, borderColor: theme.border }}
         aria-label="Sidebar"
       >
         {/* Sidebar Header */}
-        <div className="flex h-16 items-center justify-between px-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex h-16 items-center justify-between px-6 border-b" style={{ borderColor: theme.border }}>
           <div className="flex items-center space-x-3">
             <img src="/gritscore.png" alt="GritScore.ai" className="h-8 w-8" />
-            <span className="font-bold text-xl text-gray-900 dark:text-white">GritScore</span>
+            <span className="font-bold text-xl" style={{ color: theme.text }}>GritScore</span>
           </div>
           {/* Close button for mobile */}
           <button 
-            className="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500" 
+            className="lg:hidden p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors" 
+            style={{ color: theme.primary[400] }}
             onClick={() => setSidebarOpen(false)} 
             aria-label="Close sidebar"
           >
@@ -215,7 +220,7 @@ export default function Layout() {
         {/* Navigation */}
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto h-[calc(100vh-8rem)]">
           <div className="mb-6">
-            <h3 className="px-3 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+            <h3 className="px-3 text-xs font-semibold uppercase tracking-wider" style={{ color: theme.primary[500] }}>
               Main Navigation
             </h3>
           </div>
@@ -228,15 +233,20 @@ export default function Layout() {
                 to={item.href}
                 className={`group flex items-center px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
                   isActive 
-                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-r-2 border-blue-600' 
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white'
+                    ? 'border-r-2' 
+                    : 'hover:bg-opacity-10'
                 }`}
+                style={{
+                  backgroundColor: isActive ? `${theme.accent}20` : 'transparent',
+                  color: isActive ? theme.accent : theme.text,
+                  borderColor: isActive ? theme.accent : 'transparent'
+                }}
                 onClick={() => setSidebarOpen(false)}
                 tabIndex={sidebarOpen || window.innerWidth >= 1024 ? 0 : -1}
               >
                 <item.icon className={`w-5 h-5 mr-3 flex-shrink-0 ${
-                  isActive ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 group-hover:text-gray-500 dark:text-gray-500 dark:group-hover:text-gray-400'
-                }`} />
+                  isActive ? '' : 'group-hover:opacity-80'
+                }`} style={{ color: isActive ? theme.accent : theme.primary[400] }} />
                 <span className="truncate">{item.name}</span>
               </Link>
             )
@@ -244,25 +254,30 @@ export default function Layout() {
         </nav>
 
         {/* Sidebar Footer */}
-        <div className="border-t border-gray-200 dark:border-gray-700 p-4 bg-white dark:bg-gray-800">
+        <div className="border-t p-4" style={{ borderColor: theme.border, backgroundColor: theme.surface }}>
           <div className="flex items-center space-x-3 mb-4">
             <div className={`w-8 h-8 bg-gradient-to-r ${gradientColors} rounded-full flex items-center justify-center`}>
               <span className="text-white font-semibold text-xs">{initials}</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+              <p className="text-sm font-medium truncate" style={{ color: theme.text }}>
                 {displayName || 'User'}
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+              <p className="text-xs truncate" style={{ color: theme.primary[500] }}>
                 {subscriptionPlan}
               </p>
             </div>
           </div>
+          
           <button
             onClick={handleLogout}
-            className="w-full flex items-center px-3 py-2 mt-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-white transition-colors duration-200"
+            className="w-full flex items-center px-3 py-2 mt-2 text-sm font-medium rounded-lg transition-colors duration-200 hover:bg-opacity-10"
+            style={{ 
+              color: theme.text,
+              backgroundColor: 'transparent'
+            }}
           >
-            <ArrowRightOnRectangleIcon className="w-5 h-5 mr-3 flex-shrink-0" />
+            <ArrowRightOnRectangleIcon className="w-5 h-5 mr-3 flex-shrink-0" style={{ color: theme.primary[400] }} />
             Sign Out
           </button>
         </div>
@@ -271,10 +286,11 @@ export default function Layout() {
       {/* Main content */}
       <div className="lg:ml-64 flex-1 flex flex-col min-w-0">
         {/* Top bar */}
-        <div className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-x-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 shadow-sm">
+        <div className="sticky top-0 z-30 flex h-16 shrink-0 items-center gap-x-4 border-b px-4 shadow-sm" style={{ backgroundColor: theme.surface, borderColor: theme.border }}>
           <button
             type="button"
-            className="-m-2.5 p-2.5 text-gray-700 dark:text-gray-300 lg:hidden"
+            className="-m-2.5 p-2.5 lg:hidden transition-colors"
+            style={{ color: theme.text }}
             onClick={() => setSidebarOpen(true)}
             aria-label="Open sidebar"
           >
@@ -292,10 +308,10 @@ export default function Layout() {
                       <span className="text-white font-semibold text-xs">{initials}</span>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900 dark:text-white group-hover:underline">
+                      <p className="text-sm font-medium group-hover:underline" style={{ color: theme.text }}>
                         {displayName}
                       </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                      <p className="text-xs" style={{ color: theme.primary[500] }}>
                         {subscriptionPlan}
                       </p>
                     </div>

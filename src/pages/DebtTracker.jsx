@@ -10,45 +10,31 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon
 } from '@heroicons/react/24/outline'
+import { supabase } from '../services/supabase'
 
 const DebtTracker = () => {
   const { user } = useAuth()
   const [debts, setDebts] = useState([])
-  const [loading, setLoading] = useState(false)
+  const [transactions, setTransactions] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [paymentStatusLoading, setPaymentStatusLoading] = useState({})
+  const [selectedMonth, setSelectedMonth] = useState(7)
+  const [selectedYear, setSelectedYear] = useState(2025)
   const [showAddDebt, setShowAddDebt] = useState(false)
   const [showEditDebt, setShowEditDebt] = useState(false)
-  const [showViewDebt, setShowViewDebt] = useState(false)
   const [showDeleteDebt, setShowDeleteDebt] = useState(false)
+  const [showViewDebt, setShowViewDebt] = useState(false)
   const [selectedDebt, setSelectedDebt] = useState(null)
-  const [modalYear, setModalYear] = useState(new Date().getFullYear())
-  const [newDebt, setNewDebt] = useState({
-    item_name: '',
-    provider: '',
-    due_date: '',
-    start_date: '',
-    end_date: '',
-    duration: '',
-    original_amount: '',
-    current_balance: '',
-    monthly_payment: '',
-    status: 'pending'
-  })
-
-  // Month and Year selectors for payment history
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1) // Use 1-12 format to match Budgeting
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
-
-  const [editInModal, setEditInModal] = useState(false);
-  const [editDebtData, setEditDebtData] = useState(null);
-
-  const [transactions, setTransactions] = useState([]);
-  const [transactionsLoaded, setTransactionsLoaded] = useState(false);
+  const [modalYear, setModalYear] = useState(2025)
+  const [editInModal, setEditInModal] = useState(false)
+  const [editDebtData, setEditDebtData] = useState(null)
+  const [transactionsLoaded, setTransactionsLoaded] = useState(false)
 
   // Fetch debts and transactions on mount
   useEffect(() => {
-    fetchDebts();
-    fetchTransactions();
-  }, []);
+    fetchDebts()
+    fetchTransactions()
+  }, [])
 
   const fetchDebts = async () => {
     setLoading(true)
@@ -65,18 +51,28 @@ const DebtTracker = () => {
 
   const fetchTransactions = async () => {
     try {
-      const response = await budgetAPI.getTransactions();
-      const transactionsData = response.data || [];
-      console.log('Fetched transactions:', transactionsData);
-      setTransactions(transactionsData);
-      setTransactionsLoaded(true);
+      // Fetch directly from Supabase for better performance
+      const { data: transactionsData, error } = await supabase
+        .from('transactions')
+        .select('*')
+        .order('date', { ascending: false })
+      
+      if (error) {
+        console.error('Error fetching transactions from Supabase:', error)
+        // Fallback to API
+        const response = await budgetAPI.getTransactions()
+        const transactionsData = response.data || []
+        setTransactions(transactionsData)
+      } else {
+        console.log('Fetched transactions from Supabase:', transactionsData)
+        setTransactions(transactionsData || [])
+      }
+      setTransactionsLoaded(true)
     } catch (error) {
-      console.error('Error fetching transactions:', error);
-      setTransactionsLoaded(true); // Mark as loaded even on error
+      console.error('Error fetching transactions:', error)
+      setTransactionsLoaded(true) // Mark as loaded even on error
     }
-  };
-
-
+  }
 
   const handleAddDebt = async (e) => {
     e.preventDefault()
@@ -134,71 +130,77 @@ const DebtTracker = () => {
   const currentYear = new Date().getFullYear()
   const yearOptions = Array.from({ length: 11 }, (_, i) => currentYear - 5 + i)
 
-  // Simple helper function to get payment status based on transaction date
-  const getPaymentStatus = (debt, monthIndex, year) => {
+  // Get payment status with loading state
+  const getPaymentStatus = async (debt, monthIndex, year) => {
+    const loadingKey = `${debt.id}-${monthIndex}-${year}`
+    
+    // If already loading, return current state
+    if (paymentStatusLoading[loadingKey]) {
+      return null // Return null to show loading state
+    }
+    
     // Find any transaction that matches this debt and month/year
     const tx = transactions.find(t => {
-      // Match by debt_id if available, otherwise by description containing debt name
       const debtMatch = t.debt_id === debt.id || 
-                       (t.description && t.description.toLowerCase().includes(debt.item_name.toLowerCase()));
-      // Defensive: parse date as string or Date
-      let txDate = t.date;
-      if (typeof txDate === 'string') txDate = new Date(txDate);
-      // Defensive: handle invalid dates
-      if (!(txDate instanceof Date) || isNaN(txDate)) return false;
-      // Match by date (month and year)
-      const dateMatch = txDate.getMonth() === (monthIndex - 1) && txDate.getFullYear() === year;
-      return debtMatch && dateMatch;
-    });
-    if (tx) {
-      // Debug log for diagnosis
-      console.log('[DEBUG] getPaymentStatus:', {
-        debt: debt.item_name,
-        monthIndex,
-        year,
-        tx,
-        status: tx.status
-      });
-    }
-    // If transaction exists and is marked as paid, return true
-    return tx && (tx.status === 'paid' || tx.status === undefined);
+                       (t.description && t.description.toLowerCase().includes(debt.item_name.toLowerCase()))
+      let txDate = t.date
+      if (typeof txDate === 'string') txDate = new Date(txDate)
+      if (!(txDate instanceof Date) || isNaN(txDate)) return false
+      const dateMatch = txDate.getMonth() === (monthIndex - 1) && txDate.getFullYear() === year
+      return debtMatch && dateMatch
+    })
+    
+    return tx && (tx.status === 'paid' || tx.status === undefined)
   }
 
+  // Check if payment status is loading for a specific month
+  const isPaymentStatusLoading = (debt, monthIndex, year) => {
+    const loadingKey = `${debt.id}-${monthIndex}-${year}`
+    return paymentStatusLoading[loadingKey]
+  }
+
+  // Update payment status with loading state
   const updatePaymentStatusForMonthYear = async (debtId, monthIndex, year, currentStatus) => {
+    const loadingKey = `${debtId}-${monthIndex}-${year}`
+    setPaymentStatusLoading(prev => ({ ...prev, [loadingKey]: true }))
+    
     try {
       // Find existing transaction for this debt and month/year
       const existingTx = transactions.find(t => {
-        const debtMatch = t.debt_id === debtId;
-        const txDate = new Date(t.date);
-        const dateMatch = txDate.getMonth() === (monthIndex - 1) && txDate.getFullYear() === year;
-        return debtMatch && dateMatch;
-      });
+        const debtMatch = t.debt_id === debtId
+        const txDate = new Date(t.date)
+        const dateMatch = txDate.getMonth() === (monthIndex - 1) && txDate.getFullYear() === year
+        return debtMatch && dateMatch
+      })
 
       if (existingTx) {
         // Update existing transaction status
-        const newStatus = currentStatus ? 'pending' : 'paid';
-        await budgetAPI.updateTransactionStatus(existingTx.id, { status: newStatus });
+        const newStatus = currentStatus ? 'pending' : 'paid'
+        await budgetAPI.updateTransactionStatus(existingTx.id, { status: newStatus })
       } else {
         // Create new transaction for this debt payment
-        const debt = debts.find(d => d.id === debtId);
+        const debt = debts.find(d => d.id === debtId)
         if (debt) {
           const newTransaction = {
             description: `${debt.item_name} - ${debt.provider}`,
             amount: debt.monthly_payment,
-            date: new Date(year, monthIndex - 1, 15).toISOString().split('T')[0], // 15th of the month
+            date: new Date(year, monthIndex - 1, 15).toISOString().split('T')[0],
             debt_id: debtId,
             status: 'paid'
-          };
-          await budgetAPI.addTransaction(newTransaction);
+          }
+          await budgetAPI.addTransaction(newTransaction)
         }
       }
       
       // Refresh data
-      fetchTransactions();
-      fetchDebts();
+      await fetchTransactions()
+      await fetchDebts()
+      toast.success('Payment status updated successfully')
     } catch (error) {
-      console.error('Error updating payment status:', error);
-      toast.error('Failed to update payment status');
+      console.error('Error updating payment status:', error)
+      toast.error('Failed to update payment status')
+    } finally {
+      setPaymentStatusLoading(prev => ({ ...prev, [loadingKey]: false }))
     }
   }
 
@@ -689,16 +691,16 @@ const DebtTracker = () => {
                 {editInModal ? (
                   <form
                     onSubmit={async (e) => {
-                      e.preventDefault();
+                      e.preventDefault()
                       try {
-                        await budgetAPI.updateDebt(selectedDebt.id, editDebtData);
-                        toast.success('Debt updated successfully!');
-                        setEditInModal(false);
-                        setShowEditDebt(false);
-                        setSelectedDebt({ ...selectedDebt, ...editDebtData });
-                        fetchDebts();
+                        await budgetAPI.updateDebt(selectedDebt.id, editDebtData)
+                        toast.success('Debt updated successfully!')
+                        setEditInModal(false)
+                        setShowEditDebt(false)
+                        setSelectedDebt({ ...selectedDebt, ...editDebtData })
+                        fetchDebts()
                       } catch (error) {
-                        toast.error('Failed to update debt');
+                        toast.error('Failed to update debt')
                       }
                     }}
                     className="space-y-4"
@@ -891,6 +893,7 @@ const DebtTracker = () => {
                   <div className="flex flex-wrap gap-3 justify-center">
                     {['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'].map((month, idx) => {
                       const monthIndex = idx + 1; // Convert to 1-12 format
+                      const isLoading = isPaymentStatusLoading(selectedDebt, monthIndex, parseInt(modalYear));
                       const isPaid = getPaymentStatus(selectedDebt, monthIndex, parseInt(modalYear));
                       
                       // Find the transaction for this month to get payment date
@@ -907,15 +910,23 @@ const DebtTracker = () => {
                       return (
                         <div
                           key={month}
-                          className={`flex flex-col items-center w-16 h-16 rounded-xl shadow-md bg-gradient-to-br ${isPaid ? 'from-green-400 to-green-600' : 'from-gray-200 to-gray-300'} justify-center transition-all group relative cursor-pointer hover:scale-105`}
-                          onClick={() => updatePaymentStatusForMonthYear(selectedDebt.id, monthIndex, parseInt(modalYear), isPaid)}
+                          className={`flex flex-col items-center w-16 h-16 rounded-xl shadow-md bg-gradient-to-br ${
+                            isLoading ? 'from-blue-200 to-blue-400' :
+                            isPaid ? 'from-green-400 to-green-600' : 'from-gray-200 to-gray-300'
+                          } justify-center transition-all group relative cursor-pointer hover:scale-105`}
+                          onClick={() => !isLoading && updatePaymentStatusForMonthYear(selectedDebt.id, monthIndex, parseInt(modalYear), isPaid)}
                         >
                           <span className="font-bold text-sm text-white drop-shadow-sm">{month}</span>
-                          <span className={`text-2xl font-bold ${isPaid ? 'text-green-200' : 'text-red-500'} transition-all duration-200`}>
-                            {isPaid ? '✔' : '✗'}
-                          </span>
+                          {isLoading ? (
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                          ) : (
+                            <span className={`text-2xl font-bold ${isPaid ? 'text-green-200' : 'text-red-500'} transition-all duration-200`}>
+                              {isPaid ? '✔' : '✗'}
+                            </span>
+                          )}
                           <div className="absolute bottom-14 left-1/2 -translate-x-1/2 z-10 hidden group-hover:block bg-black text-white text-xs rounded px-2 py-1 whitespace-nowrap pointer-events-none shadow-lg">
-                            {isPaid ? (paymentDate ? `Paid on ${paymentDate}` : 'Paid') : 'Click to mark as paid'}
+                            {isLoading ? 'Loading...' : 
+                             isPaid ? (paymentDate ? `Paid on ${paymentDate}` : 'Paid') : 'Click to mark as paid'}
                           </div>
                         </div>
                       );
@@ -927,8 +938,8 @@ const DebtTracker = () => {
             <div className="flex flex-col md:flex-row justify-end items-center gap-4 pt-6">
               <button
                 onClick={() => {
-                  setEditDebtData(selectedDebt);
-                  setEditInModal(true);
+                  setEditDebtData(selectedDebt)
+                  setEditInModal(true)
                 }}
                 disabled={!selectedDebt}
                 className={`btn-primary text-lg px-6 py-2 rounded-xl shadow-md transition-opacity ${!selectedDebt ? 'opacity-50 cursor-not-allowed' : ''}`}
