@@ -42,6 +42,7 @@ const DebtTracker = () => {
   const [editDebtData, setEditDebtData] = useState(null);
 
   const [transactions, setTransactions] = useState([]);
+  const [transactionsLoaded, setTransactionsLoaded] = useState(false);
 
   // Fetch debts and transactions on mount
   useEffect(() => {
@@ -68,9 +69,10 @@ const DebtTracker = () => {
       const transactionsData = response.data || [];
       console.log('Fetched transactions:', transactionsData);
       setTransactions(transactionsData);
+      setTransactionsLoaded(true);
     } catch (error) {
       console.error('Error fetching transactions:', error);
-      // Optionally show a toast
+      setTransactionsLoaded(true); // Mark as loaded even on error
     }
   };
 
@@ -880,39 +882,46 @@ const DebtTracker = () => {
                     ))}
                   </select>
                 </div>
-                <div className="flex flex-wrap gap-3 justify-center">
-                  {['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'].map((month, idx) => {
-                    const monthIndex = idx + 1; // Convert to 1-12 format
-                    const isPaid = getPaymentStatus(selectedDebt, monthIndex, parseInt(modalYear));
-                    
-                    // Find the transaction for this month to get payment date
-                    const transaction = transactions.find(t => {
-                      const debtMatch = t.debt_id === selectedDebt.id || 
-                                       (t.description && t.description.toLowerCase().includes(selectedDebt.item_name.toLowerCase()));
-                      const txDate = new Date(t.date);
-                      const dateMatch = txDate.getMonth() === (monthIndex - 1) && txDate.getFullYear() === parseInt(modalYear);
-                      return debtMatch && dateMatch;
-                    });
-                    
-                    const paymentDate = transaction ? new Date(transaction.date).toLocaleDateString() : null;
-                    
-                    return (
-                      <div
-                        key={month}
-                        className={`flex flex-col items-center w-16 h-16 rounded-xl shadow-md bg-gradient-to-br ${isPaid ? 'from-green-400 to-green-600' : 'from-gray-200 to-gray-300'} justify-center transition-all group relative cursor-pointer hover:scale-105`}
-                        onClick={() => updatePaymentStatusForMonthYear(selectedDebt.id, monthIndex, parseInt(modalYear), isPaid)}
-                      >
-                        <span className="font-bold text-sm text-white drop-shadow-sm">{month}</span>
-                        <span className={`text-2xl font-bold ${isPaid ? 'text-green-200' : 'text-red-500'} transition-all duration-200`}>
-                          {isPaid ? '✔' : '✗'}
-                        </span>
-                        <div className="absolute bottom-14 left-1/2 -translate-x-1/2 z-10 hidden group-hover:block bg-black text-white text-xs rounded px-2 py-1 whitespace-nowrap pointer-events-none shadow-lg">
-                          {isPaid ? (paymentDate ? `Paid on ${paymentDate}` : 'Paid') : 'Click to mark as paid'}
+                {!transactionsLoaded ? (
+                  <div className="flex items-center justify-center w-full h-32">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <span className="ml-2 text-sm text-gray-600">Loading payment data...</span>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-3 justify-center">
+                    {['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'].map((month, idx) => {
+                      const monthIndex = idx + 1; // Convert to 1-12 format
+                      const isPaid = getPaymentStatus(selectedDebt, monthIndex, parseInt(modalYear));
+                      
+                      // Find the transaction for this month to get payment date
+                      const transaction = transactions.find(t => {
+                        const debtMatch = t.debt_id === selectedDebt.id || 
+                                         (t.description && t.description.toLowerCase().includes(selectedDebt.item_name.toLowerCase()));
+                        const txDate = new Date(t.date);
+                        const dateMatch = txDate.getMonth() === (monthIndex - 1) && txDate.getFullYear() === parseInt(modalYear);
+                        return debtMatch && dateMatch;
+                      });
+                      
+                      const paymentDate = transaction ? new Date(transaction.date).toLocaleDateString() : null;
+                      
+                      return (
+                        <div
+                          key={month}
+                          className={`flex flex-col items-center w-16 h-16 rounded-xl shadow-md bg-gradient-to-br ${isPaid ? 'from-green-400 to-green-600' : 'from-gray-200 to-gray-300'} justify-center transition-all group relative cursor-pointer hover:scale-105`}
+                          onClick={() => updatePaymentStatusForMonthYear(selectedDebt.id, monthIndex, parseInt(modalYear), isPaid)}
+                        >
+                          <span className="font-bold text-sm text-white drop-shadow-sm">{month}</span>
+                          <span className={`text-2xl font-bold ${isPaid ? 'text-green-200' : 'text-red-500'} transition-all duration-200`}>
+                            {isPaid ? '✔' : '✗'}
+                          </span>
+                          <div className="absolute bottom-14 left-1/2 -translate-x-1/2 z-10 hidden group-hover:block bg-black text-white text-xs rounded px-2 py-1 whitespace-nowrap pointer-events-none shadow-lg">
+                            {isPaid ? (paymentDate ? `Paid on ${paymentDate}` : 'Paid') : 'Click to mark as paid'}
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
             <div className="flex flex-col md:flex-row justify-end items-center gap-4 pt-6">
